@@ -1,0 +1,42 @@
+#!/bin/sh -
+
+set -o errexit
+set -o nounset
+
+if git rev-parse --verify HEAD > /dev/null 2>&1
+then against=HEAD
+else against=$(git hash-object -t tree /dev/null)
+fi
+
+log() {
+	lvl="$1"
+	msg="$2"
+
+	if [ "$lvl" = 'error' ]
+	then exec 3>&2
+	else exec 3>&1
+	fi
+	printf 'pre-commit: %s: %s\n' "$lvl" "$msg" >&3
+	exec 3>&-
+}
+
+FILES=$(git diff --staged --name-only "$against")
+if [ -z "$FILES" ]
+then exit 0
+fi
+
+ZIG_FILES=$( (echo "$FILES" | grep -e '.*\.zig$') || echo "" )
+if [ -n "$ZIG_FILES" ]; then
+	log 'info' 'checking Zig source code formatting...'
+	zig fmt --check "$ZIG_FILES" \
+		|| (log 'error' 'found improperly formatted file(s)'; exit 1)
+
+	log 'info' 'building...'
+	zig build
+
+	log 'info' 'running tests...'
+	zig build test
+fi
+
+log 'info' 'OK!'
+exit 0
