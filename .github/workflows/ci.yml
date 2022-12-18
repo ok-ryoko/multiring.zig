@@ -1,0 +1,46 @@
+name: ci
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/*'
+      - '**.zig'
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/*'
+      - '**.zig'
+
+jobs:
+  debug:
+    strategy:
+      matrix:
+        version:
+          - 0.9.1
+
+    runs-on:
+      - ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: ${{ matrix.version }}
+
+      - name: Print Zig environment
+        run: zig env
+
+      - name: Check Zig source code formatting
+        run: zig fmt --check '.'
+
+      - name: Build
+        run: zig build
+
+      - name: Run tests
+        run: zig build test
