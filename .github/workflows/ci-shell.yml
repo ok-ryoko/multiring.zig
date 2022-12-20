@@ -1,0 +1,30 @@
+name: ci-shell
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/ci-shell.yml'
+      - '.githooks/**'
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/ci-shell.yml'
+      - '.githooks/**'
+
+jobs:
+  lint:
+    runs-on:
+      - ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Print ShellCheck version
+        run: shellcheck --version
+
+      - name: Lint shell scripts
+        run: shellcheck --shell=sh .githooks/**
