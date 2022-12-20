@@ -38,5 +38,12 @@ if [ -n "$ZIG_FILES" ]; then
 	zig build test
 fi
 
+SHELL_SCRIPTS=$( (echo "$FILES" | grep -e '^\.githooks/.*') || echo "" )
+if [ -n "$SHELL_SCRIPTS" ]; then
+	log 'info' 'linting shell scripts...'
+	shellcheck --shell=sh "$SHELL_SCRIPTS" \
+		|| (log 'error' 'found problem(s) in shell script(s)'; exit 1)
+fi
+
 log 'info' 'OK!'
 exit 0
