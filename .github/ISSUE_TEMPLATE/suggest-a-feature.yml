@@ -1,0 +1,41 @@
+name: 🎁 Suggest a feature
+description: Propose new or improved functionality for the software
+labels: [enhancement]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for your interest in multiring.zig!
+
+        Before suggesting a feature, check the [issue tracker](https://github.com/ok-ryoko/multiring.zig/issues) to make sure someone hasn’t already suggested the same feature.
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of conduct
+      description: The community around this project has a [code of conduct](https://github.com/ok-ryoko/multiring.zig/blob/main/CODE_OF_CONDUCT.md) that all participants are expected to understand and follow.
+      options:
+        - label: I have read and agree to the community’s code of conduct.
+          required: true
+
+  - type: textarea
+    attributes:
+      label: Use case
+      description: What problem does the enhancement intend to address? How does addressing this problem create value for users or community participants?
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Ideal solution
+      description: How would you like to experience the new feature when using the software?
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Supporting information
+      description: Provide additional context, examples, etc., to reinforce your proposal, if applicable.
+    validations:
+      required: false

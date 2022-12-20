@@ -1,0 +1,56 @@
+name: 🐛 Report a bug
+description: Bring unexpected or undesirable program behavior to the community’s attention
+labels: [bug]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for your interest in multiring.zig! Before submitting a bug report:
+
+        * check the [issue tracker](https://github.com/ok-ryoko/multiring.zig/issues) to make sure someone hasn’t already reported the same bug, and
+        * ideally, reproduce the bug in your environment at least once under the same conditions as when you first found the bug.
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of conduct
+      description: The community around this project has a [code of conduct](https://github.com/ok-ryoko/multiring.zig/blob/main/CODE_OF_CONDUCT.md) that all participants are expected to understand and follow.
+      options:
+        - label: I have read and agree to the community’s code of conduct.
+          required: true
+
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: What detailed steps should someone else follow, and in what order, to reproduce the bug exactly?
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Expected behavior or outcome
+      description: What is supposed to happen when someone follows the steps above?
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Actual behavior or outcome
+      description: What actually happens when you follow the steps?
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Context
+      description: Include relevant supporting details such as your Zig version number, operating system, CPU architecture, etc.
+    validations:
+      required: false
+
+  - type: textarea
+    attributes:
+      label: Working solution
+      description: Have you found a way to work around the problem? If so, please describe it here. If applicable, mention any compromises you’ve had to make or side-effects you’ve observed.
+    validations:
+      required: false

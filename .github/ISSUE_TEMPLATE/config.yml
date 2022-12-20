@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Discussions
+    url: https://github.com/ok-ryoko/multiring.zig/discussions
+    about: Start a new discussion or join an existing discussion if your query isn’t covered by an issue template or shouldn’t be treated as an issue

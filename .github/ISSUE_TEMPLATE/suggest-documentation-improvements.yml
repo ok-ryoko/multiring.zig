@@ -1,0 +1,53 @@
+name: 📚 Suggest improvements to documentation
+description: Identify points of confusion, missing information, and spelling or grammar mistakes
+labels: [documentation]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for your interest in multiring.zig!
+
+        Before suggesting improvements to our documentation, check the [issue tracker](https://github.com/ok-ryoko/multiring.zig/issues) to make sure someone hasn’t already made the same suggestion.
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of conduct
+      description: The community around this project has a [code of conduct](https://github.com/ok-ryoko/multiring.zig/blob/main/CODE_OF_CONDUCT.md) that all participants are expected to understand and follow.
+      options:
+        - label: I have read and agree to the community’s code of conduct.
+          required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      description: Which part of the documentation could be better? If the item you had in mind is absent from this list, please [start a discussion](https://github.com/ok-ryoko/multiring.zig/discussions).
+      options:
+        - README.md
+        - CODE_OF_CONDUCT.md
+        - code comments
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Value proposition
+      description: Why should this part of the documentation be updated?
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Implementation
+      description: How should this part of the documentation be updated? Should we provide, for example, clarifying text, additional examples, a new type of medium (for example, video) or something else?
+    validations:
+      required: false
+
+  - type: textarea
+    attributes:
+      label: Supporting information
+      description: Provide additional context, examples, etc., to reinforce your proposal, if applicable.
+    validations:
+      required: false

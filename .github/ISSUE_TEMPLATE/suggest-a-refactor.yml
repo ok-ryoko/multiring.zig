@@ -1,0 +1,48 @@
+name: 🔩 Suggest a refactor
+description: Propose a better way to implement one or more parts of the software
+labels: [enhancement]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for your interest in multiring.zig!
+
+        Before suggesting a refactor, check the [issue tracker](https://github.com/ok-ryoko/multiring.zig/issues) to make sure someone hasn’t already suggested the same refactor.
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of conduct
+      description: The community around this project has a [code of conduct](https://github.com/ok-ryoko/multiring.zig/blob/main/CODE_OF_CONDUCT.md) that all participants are expected to understand and follow.
+      options:
+        - label: I have read and agree to the community’s code of conduct.
+          required: true
+
+  - type: textarea
+    attributes:
+      label: Scope
+      description: What part(s) of the code base should be refactored?
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Implementation
+      description: How should the indicated part(s) of the code base be refactored?
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Value proposition
+      description: How does refactoring the code in the indicated manner make the code easier to read and/or extend?
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Supporting information
+      description: Provide additional context, examples, etc., to reinforce your proposal, if applicable.
+    validations:
+      required: false
