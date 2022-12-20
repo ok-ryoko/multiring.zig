@@ -3,15 +3,8 @@
 set -o errexit
 set -o nounset
 
-if git rev-parse --verify HEAD > /dev/null 2>&1
-then against=HEAD
-else against=$(git hash-object -t tree /dev/null)
-fi
-
 log() {
-	lvl="$1"
-	msg="$2"
-
+	lvl="$1"; msg="$2"
 	if [ "$lvl" = 'error' ]
 	then exec 3>&2
 	else exec 3>&1
@@ -20,16 +13,37 @@ log() {
 	exec 3>&-
 }
 
+log_fatal() {
+	msg="$1"
+	log 'error' "$msg"
+	exit 1
+}
+
+filter_lines() {
+	lines="$1"; patterns="$2"
+	printf '%s' "$(
+		(echo "$lines" | grep -e "$patterns") \
+			|| echo ""
+	)"
+}
+
+if git rev-parse --verify HEAD > /dev/null 2>&1
+then against=HEAD
+else against=$(git hash-object -t tree /dev/null)
+fi
+
 FILES=$(git diff --staged --name-only "$against")
 if [ -z "$FILES" ]
 then exit 0
 fi
 
-ZIG_FILES=$( (echo "$FILES" | grep -e '.*\.zig$') || echo "" )
+ZIG_PATTERN='^src/.*\.zig$\|^build\.zig$'
+ZIG_FILES=$(filter_lines "$FILES" "$ZIG_PATTERN")
 if [ -n "$ZIG_FILES" ]; then
 	log 'info' 'checking Zig source code formatting...'
-	zig fmt --check "$ZIG_FILES" \
-		|| (log 'error' 'found improperly formatted file(s)'; exit 1)
+	# shellcheck disable=SC2086
+	zig fmt --check $ZIG_FILES \
+		|| log_fatal 'found improperly formatted file(s)'
 
 	log 'info' 'building...'
 	zig build
@@ -38,11 +52,13 @@ if [ -n "$ZIG_FILES" ]; then
 	zig build test
 fi
 
-SHELL_SCRIPTS=$( (echo "$FILES" | grep -e '^\.githooks/.*') || echo "" )
+SHELL_PATTERN='^\.githooks/.*$'
+SHELL_SCRIPTS=$(filter_lines "$FILES" "$SHELL_PATTERN")
 if [ -n "$SHELL_SCRIPTS" ]; then
 	log 'info' 'linting shell scripts...'
-	shellcheck --shell=sh "$SHELL_SCRIPTS" \
-		|| (log 'error' 'found problem(s) in shell script(s)'; exit 1)
+	# shellcheck disable=SC2086
+	shellcheck --shell=sh $SHELL_SCRIPTS \
+		|| log_fatal 'found problem(s) in shell script(s)'
 fi
 
 log 'info' 'OK!'
