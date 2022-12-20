@@ -27,4 +27,4 @@ jobs:
         run: shellcheck --version
 
       - name: Lint shell scripts
-        run: shellcheck --shell=sh .githooks/**
+        run: shellcheck --format=gcc --shell=sh .githooks/**
