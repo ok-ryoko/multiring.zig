@@ -41,6 +41,10 @@ ZIG_PATTERN='^src/.*\.zig$\|^build\.zig$'
 ZIG_FILES=$(filter_lines "$FILES" "$ZIG_PATTERN")
 if [ -n "$ZIG_FILES" ]; then
 	log 'info' 'checking Zig source code formatting...'
+
+	command -v zig > /dev/null \
+		|| log_fatal 'Zig not found'
+
 	# shellcheck disable=SC2086
 	zig fmt --check $ZIG_FILES \
 		|| log_fatal 'found improperly formatted file(s)'
@@ -56,6 +60,10 @@ SHELL_PATTERN='^\.githooks/.*$'
 SHELL_SCRIPTS=$(filter_lines "$FILES" "$SHELL_PATTERN")
 if [ -n "$SHELL_SCRIPTS" ]; then
 	log 'info' 'linting shell scripts...'
+
+	command -v shellcheck > /dev/null \
+		|| log_fatal 'ShellCheck not found'
+
 	# shellcheck disable=SC2086
 	shellcheck --shell=sh $SHELL_SCRIPTS \
 		|| log_fatal 'found problem(s) in shell script(s)'
@@ -65,6 +73,10 @@ YAML_PATTERN='^\.github/.*\.yml$'
 YAML_FILES=$(filter_lines "$FILES" "$YAML_PATTERN")
 if [ -n "$YAML_FILES" ]; then
 	log 'info' 'linting YAML files...'
+
+	command -v yamllint > /dev/null \
+		|| log_fatal 'yamllint not found'
+
 	# shellcheck disable=SC2086
 	yamllint --no-warnings $YAML_FILES \
 		|| log_fatal 'found problem(s) in YAML file(s)'
