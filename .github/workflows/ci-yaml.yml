@@ -1,0 +1,30 @@
+name: ci-yaml
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/**.yml'
+      - '.yamllint'
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/**.yml'
+      - '.yamllint'
+
+jobs:
+  lint:
+    runs-on:
+      - ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Print yamllint version
+        run: yamllint --version
+
+      - name: Lint YAML files
+        run: yamllint --no-warnings .github/

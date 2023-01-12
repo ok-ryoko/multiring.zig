@@ -61,5 +61,14 @@ if [ -n "$SHELL_SCRIPTS" ]; then
 		|| log_fatal 'found problem(s) in shell script(s)'
 fi
 
+YAML_PATTERN='^\.github/.*\.yml$'
+YAML_FILES=$(filter_lines "$FILES" "$YAML_PATTERN")
+if [ -n "$YAML_FILES" ]; then
+	log 'info' 'linting YAML files...'
+	# shellcheck disable=SC2086
+	yamllint --no-warnings $YAML_FILES \
+		|| log_fatal 'found problem(s) in YAML file(s)'
+fi
+
 log 'info' 'OK!'
 exit 0
