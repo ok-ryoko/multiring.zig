@@ -63,7 +63,7 @@ To work on multiring.zig, you’ll need some or all of following software:
 - [Git] 2.9 or newer
 - [Zig] 0.9.1, for work on the multiring data structure
 - [ShellCheck] 0.8, for [Git hook][githooks] development
-- [yamllint] 1.28, for [GitHub issue forms][syntax for issue forms] and [GitHub Actions workflows]
+- [yamllint] 1.29, for [GitHub issue forms][syntax for issue forms] and [GitHub Actions workflows]
 
 ### Claiming an issue
 
@@ -392,5 +392,5 @@ These guidelines exist to foster a seamless and open contributing experience for
 [use multiring.zig]: https://github.com/ok-ryoko/multiring.zig#usage
 [workflows]: ./.github/workflows
 [YAML]: https://yaml.org/
-[yamllint]: https://yamllint.readthedocs.io/en/v1.28.0/
+[yamllint]: https://yamllint.readthedocs.io/en/v1.29.0/
 [Zig]: https://ziglang.org/
