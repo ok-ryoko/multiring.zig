@@ -27,6 +27,8 @@ body:
       options:
         - README.md
         - CODE_OF_CONDUCT.md
+        - CONTRIBUTING.md
+        - PULL_REQUEST_TEMPLATE.md
         - code comments
     validations:
       required: true
