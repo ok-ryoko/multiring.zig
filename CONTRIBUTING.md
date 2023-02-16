@@ -50,7 +50,7 @@ The community around this project has a [code of conduct] that all participants 
 
 ## Opening an issue
 
-An issue represents a logical unit of work on the project. [Opening an issue] is the simplest way to contribute to the project and sets the stage for a potential incremental improvement.
+An issue represents a logical unit of work on the project. [Opening an issue][open an issue] is the simplest way to contribute to the project and sets the stage for a potential incremental improvement.
 
 When we open an issue, we are effectively requesting a constructive discussion about whether some work should be done on the project. We open issues without expectation of a particular outcome. We aim to discover, through collaboration, an outcome that adds incremental value to both the project itself and the community around it. In working towards this goal, we open our minds eagerly to new ideas without becoming attached to or identifying with them.
 
@@ -69,7 +69,7 @@ To work on multiring.zig, you’ll need some or all of following software:
 
 ### Claiming an issue
 
-If you would like to work on an issue, then leave a comment containing a brief plan for resolving the issue and await feedback from the community. Your proposal shall be reviewed by at least one maintainer within one week. Participants shall agree on an *ad hoc* timeline for the work, which may be renegotiated at any point in the process.
+If you would like to work on an issue, then leave a comment containing a brief plan for resolving the issue and await feedback from the community. Your proposal shall be reviewed by at least 1 maintainer within 1 week. Participants shall agree on an *ad hoc* timeline for the work, which may be renegotiated at any point in the process.
 
 ### Getting the source code
 
@@ -166,7 +166,7 @@ Before creating a pull request, consider performing an [interactive rebase] to o
 
 ### Receiving feedback
 
-Your pull request shall be reviewed by at least one maintainer within two weeks, and may be reviewed by any member of the community at any point in the process. The maintainer(s) reviewing your pull request may [ask you to make changes][incorporating feedback]. When this happens, we agree on an *ad hoc* timeline for receiving your changes on the basis of their estimated size, complexity and urgency as well as your availability.
+Your pull request shall be reviewed by at least 1 maintainer within 2 weeks, and may be reviewed by any member of the community at any point in the process. The maintainer(s) reviewing your pull request may [ask you to make changes][incorporating feedback]. When this happens, we agree on an *ad hoc* timeline for receiving your changes on the basis of their estimated size, complexity and urgency as well as your availability.
 
 See also: [Reviewing pull requests](#reviewing-pull-requests)
 
@@ -306,7 +306,7 @@ See also: [Continuous integration](#continuous-integration)
 
 ### Continuous integration
 
-We practice [continuous integration] (CI) with [GitHub Actions]. We run one workflow for each flavor of code for both pushes and pull requests to *main*. This design is appropriate because each flavor of code in this repository is consumed and validated independently.
+We practice [continuous integration] with [GitHub Actions]. We run one workflow for each flavor of code for both pushes and pull requests to *main*. This design is appropriate because each flavor of code in this repository is consumed and validated independently.
 
 See also: [Commit hooks](#commit-hooks)
 
@@ -324,9 +324,9 @@ The review process has the following goals:
 
 When changes need to be made to the pull request, our priority is to help the author succeed in making those changes.
 
-We keep pull request reviews open for at least 5 days to account for differences in time zones and work week structure across the world.
+We keep pull request reviews open for at least 5 days to account for differences in time zones and work week structure across the world. However, if the corresponding issue is urgent or blocking an urgent issue, then we may close the pull request sooner.
 
-If a pull request appears to have stalled or been abandoned, then we follow up with the author to confirm the status of the work. If the author confirms that the pull request is abandoned or we don’t hear back within two weeks, then we reassign the work. We attribute any work already submitted to the original author.
+If a pull request appears to have stalled or been abandoned, then we follow up with the author to confirm the status of the work. If the author confirms that the pull request is abandoned or we don’t hear back within 2 weeks, then we reassign the work. We attribute any work already submitted to the original author.
 
 See also: [Pull request approval criteria](#pull-request-approval-criteria)
 
@@ -353,7 +353,6 @@ These guidelines exist to foster a seamless and open contributing experience for
 [bugs]: https://github.com/ok-ryoko/multiring.zig/labels/bug
 [code of conduct]: ./CODE_OF_CONDUCT.md
 [continuous integration]: https://martinfowler.com/articles/continuousIntegration.html
-[Contributor Covenant]: https://www.contributor-covenant.org/
 [CONTRIBUTORS]: ./CONTRIBUTORS
 [Conventional Commits 1.0.0]: https://www.conventionalcommits.org/en/v1.0.0/
 [Create a pull request]: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request
@@ -377,12 +376,10 @@ These guidelines exist to foster a seamless and open contributing experience for
 [How do I resolve merge conflicts in my Git repository?]: https://stackoverflow.com/q/161813
 [How to Write a Git Commit Message]: https://cbea.ms/git-commit/
 [incorporating feedback]: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/reviewing-changes-in-pull-requests/incorporating-feedback-in-your-pull-request
-[install ShellCheck]: https://github.com/koalaman/shellcheck#installing
-[install yamllint]: https://yamllint.readthedocs.io/en/stable/quickstart.html#installing-yamllint
 [interactive rebase]: https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History
 [issue forms]: ./.github/ISSUE_TEMPLATES
 [issues]: https://github.com/ok-ryoko/multiring.zig/issues
-[Opening an issue]: https://github.com/ok-ryoko/multiring.zig/issues/new/choose
+[open an issue]: https://github.com/ok-ryoko/multiring.zig/issues/new/choose
 [operations]: https://github.com/ok-ryoko/multiring.zig/labels/operations
 [POSIX shell]: https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html
 [pre-commit hook]: ./.githooks/pre-commit
