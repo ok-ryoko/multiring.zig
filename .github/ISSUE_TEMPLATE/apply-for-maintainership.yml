@@ -35,10 +35,10 @@ body:
       label: Responsibilities of interest
       description: Which responsibilities are you most interested in and willing to fulfill?
       options:
-        - Review, approve and integrate pull requests
-        - Enforce the code of conduct
-        - Manage and opine on issues and discussions to help achieve consensus
-        - Review maintainership applications
+        - label: Review, approve and integrate pull requests
+        - label: Enforce the code of conduct
+        - label: Manage and opine on issues and discussions to help achieve consensus
+        - label: Review maintainership applications
     validations:
       required: true
 
