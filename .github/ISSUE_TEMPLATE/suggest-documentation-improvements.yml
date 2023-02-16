@@ -30,6 +30,7 @@ body:
         - CONTRIBUTING.md
         - PULL_REQUEST_TEMPLATE.md
         - GOVERNANCE.md
+        - issue forms
         - code comments
     validations:
       required: true
