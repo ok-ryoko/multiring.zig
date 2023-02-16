@@ -46,6 +46,7 @@ The community around this project has a [code of conduct] that all participants 
 - [🏷️ Comment or work on an existing issue][issues]
 - [💬 Start a discussion][discussions]
 - [🕹️ Use multiring.zig][use multiring.zig] or write about it
+- [🛠️ Apply for maintainership][governance]
 
 ## Opening an issue
 
@@ -372,6 +373,7 @@ These guidelines exist to foster a seamless and open contributing experience for
 [GitHub Actions]: https://github.com/features/actions
 [GitHub issues]: https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues
 [GitHub-hosted Ubuntu 22.04 LTS runner image]: https://github.com/actions/runner-images/blob/ubuntu22/20221212.1/images/linux/Ubuntu2204-Readme.md
+[governance]: ./GOVERNANCE.md
 [How do I resolve merge conflicts in my Git repository?]: https://stackoverflow.com/q/161813
 [How to Write a Git Commit Message]: https://cbea.ms/git-commit/
 [incorporating feedback]: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/reviewing-changes-in-pull-requests/incorporating-feedback-in-your-pull-request
@@ -380,7 +382,6 @@ These guidelines exist to foster a seamless and open contributing experience for
 [interactive rebase]: https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History
 [issue forms]: ./.github/ISSUE_TEMPLATES
 [issues]: https://github.com/ok-ryoko/multiring.zig/issues
-[MAINTAINERS]: ./MAINTAINERS
 [Opening an issue]: https://github.com/ok-ryoko/multiring.zig/issues/new/choose
 [operations]: https://github.com/ok-ryoko/multiring.zig/labels/operations
 [POSIX shell]: https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html

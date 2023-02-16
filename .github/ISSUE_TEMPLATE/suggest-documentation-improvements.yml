@@ -29,6 +29,7 @@ body:
         - CODE_OF_CONDUCT.md
         - CONTRIBUTING.md
         - PULL_REQUEST_TEMPLATE.md
+        - GOVERNANCE.md
         - code comments
     validations:
       required: true
