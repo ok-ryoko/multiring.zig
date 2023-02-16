@@ -39,6 +39,7 @@ The community around this project has a [code of conduct] that all participants 
 ## Ways to contribute
 
 - [🐛 Report a bug or reproduce an existing bug][bugs]
+- [⚙️  Spot a chore][operations]
 - [🎁 Suggest a feature][enhancements]
 - [🔩 Suggest a refactor][enhancements]
 - [📚 Suggest improvements to documentation][documentation]
@@ -183,6 +184,7 @@ See also: [Pull request approval criteria](#pull-request-approval-criteria), [At
 We use [GitHub issues] to track the following types of work:
 
 - bug reports;
+- operational chores;
 - feature requests;
 - suggestions to refactor, and
 - suggestions to improve documentation.
@@ -380,6 +382,7 @@ These guidelines exist to foster a seamless and open contributing experience for
 [issues]: https://github.com/ok-ryoko/multiring.zig/issues
 [MAINTAINERS]: ./MAINTAINERS
 [Opening an issue]: https://github.com/ok-ryoko/multiring.zig/issues/new/choose
+[operations]: https://github.com/ok-ryoko/multiring.zig/labels/operations
 [POSIX shell]: https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html
 [pre-commit hook]: ./.githooks/pre-commit
 [psychological safety]: https://stackoverflow.blog/2022/01/27/psychological-safety-is-critical-for-high-performing-teams/

@@ -1,0 +1,31 @@
+name: ⚙️  Spot a chore
+description: Point out a broken CI build, faulty script, need for a configure change, outdated dependency, etc.
+labels: [operations]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: Thank you for your interest in multiring.zig! Before continuing, check the [issue tracker](https://github.com/ok-ryoko/multiring.zig/issues) to make sure someone hasn’t already spotted the same chore.
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of conduct
+      description: The community around this project has a [code of conduct](https://github.com/ok-ryoko/multiring.zig/blob/main/CODE_OF_CONDUCT.md) that all participants are expected to understand and follow.
+      options:
+        - label: I have read and agree to the community’s code of conduct.
+          required: true
+
+  - type: textarea
+    attributes:
+      label: Problem statement
+      description: Motivate and specify the work to be done
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Supporting information
+      description: Include relevant supporting details here
+    validations:
+      required: false
