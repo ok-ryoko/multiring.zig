@@ -43,6 +43,14 @@ pub fn MultiRing(comptime T: type) type {
                     .data => |s| s.step(),
                 };
             }
+
+            /// Same as Node.step() but never leaves the current ring
+            pub fn stepLocal(self: Node) Node {
+                return switch (self) {
+                    .gate => |s| s.step(),
+                    .data => |s| s.stepLocal(),
+                };
+            }
         };
 
         /// Sentinel node that acts as a waypoint into and out of a possibly
@@ -133,6 +141,17 @@ pub fn MultiRing(comptime T: type) type {
                             return .{ .data = next_node };
                         },
                     }
+                }
+            }
+
+            pub fn stepLocal(node: *DataNode) Node {
+                switch (node.next.?) {
+                    .gate => |next_node| {
+                        return .{ .data = next_node.next.? };
+                    },
+                    .data => |next_node| {
+                        return .{ .data = next_node };
+                    },
                 }
             }
 
@@ -316,6 +335,18 @@ test "fundamental operations" {
     try testing.expectEqual(
         M.Node{ .data = &r0_data_nodes[0] },
         r0_data_nodes[3].step(),
+    );
+
+    // step forward from the 1st data node to the 2nd data node in r1
+    try testing.expectEqual(
+        M.Node{ .data = &r1_data_nodes[1] },
+        r1_data_nodes[0].stepLocal(),
+    );
+
+    // loop back from the last data node to the first data node in r1
+    try testing.expectEqual(
+        M.Node{ .data = &r1_data_nodes[0] },
+        r1_data_nodes[5].stepLocal(),
     );
 
     // remove a data node in the multiring (in r3)
