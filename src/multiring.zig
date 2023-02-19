@@ -265,11 +265,11 @@ test "fundamental operations" {
         .{ .data = 2 },
     };
     g1.insertAfter(&r1_data_nodes[0]);
-    r1_data_nodes[0].insertAfter(&r1_data_nodes[1]);
-    r1_data_nodes[1].insertAfter(&r1_data_nodes[2]);
-    r1_data_nodes[2].insertAfter(&r1_data_nodes[3]);
-    r1_data_nodes[3].insertAfter(&r1_data_nodes[4]);
-    r1_data_nodes[4].insertAfter(&r1_data_nodes[5]);
+
+    comptime var i = 0;
+    inline while (i < 5) : (i += 1) {
+        r1_data_nodes[i].insertAfter(&r1_data_nodes[i + 1]);
+    }
 
     // attach subring r1 to ring r0
     try multiring.attachSubring(&r0_data_nodes[0], &g1);
@@ -285,10 +285,11 @@ test "fundamental operations" {
         .{ .data = 7 },
     };
     g2.insertAfter(&r2_data_nodes[0]);
-    r2_data_nodes[0].insertAfter(&r2_data_nodes[1]);
-    r2_data_nodes[1].insertAfter(&r2_data_nodes[2]);
-    r2_data_nodes[2].insertAfter(&r2_data_nodes[3]);
-    r2_data_nodes[3].insertAfter(&r2_data_nodes[4]);
+
+    comptime var j = 0;
+    inline while (j < 4) : (j += 1) {
+        r2_data_nodes[j].insertAfter(&r2_data_nodes[j + 1]);
+    }
 
     try multiring.attachSubring(&r0_data_nodes[2], &g2);
 
