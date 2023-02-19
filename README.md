@@ -1,9 +1,3 @@
-# multiring.zig
-
-The *multiring* is a singly linked, cyclic and hierarchical [abstract data type] (ADT). This pointer-based [Zig] implementation is intended to expose a rich set of methods that preserve the structural integrity of the multiring.
-
-## Concepts
-
 <picture>
   <source
     media="(prefers-color-scheme: dark)"
@@ -14,33 +8,85 @@ The *multiring* is a singly linked, cyclic and hierarchical [abstract data type]
     srcset="./docs/img/multiring-github-light.png"
   >
   <img
-    title="multiring"
-    img alt=""
     src="./docs/img/multiring-github-light.png"
+    title="multiring"
+    alt="A multiring comprising 18 data nodes arranged in 5 rings at 3 levels"
     align="right"
-    height="120"
+    height="100"
   >
 </picture>
 
-A **singly [linked list]** is a sequence of one or more data nodes. Each **data node** contains data (an int, struct, etc.) and an optional pointer to another data node.
 
-Suppose, for whatever reason, that we want to cyclize a singly linked list into a **ring.** In other words, we want to connect the tail node to the head node. Doing so directly results in an ADT in which there are no intrinsic notions of beginning and end. If we wanted a reproducible traversal of the ring’s data nodes, then we would have to manage an extra pointer into the ring.
+# multiring.zig
 
-An alternative solution is to come up with the idea of a **gate node,** which consists entirely of one optional pointer to a data node. We then redefine the **ring** as a sequence of one gate node and zero or more data nodes. A ring that has zero data nodes is an **empty ring.** The gate node in an empty ring doesn’t point to any node. In a non-empty ring, the gate node points to the first data node and the last data node points to the gate node. Thus, we have a ring ADT for which traversal is reproducible and managed by the implementation.
+The *multiring* is a singly [linked][linked list], cyclic and [hierarchical][tree] [abstract data type] that supports forward traversal. multiring.zig implements the mulitiring in the [Zig language][Zig].
 
-To further increase the flexibility of this ADT (again, for whatever reason), we can introduce hierarchical properties by allowing every data node to know about a child gate node and every gate node to know about a parent data node. This new **multiring** ADT allows us to “descend into” and “ascend from” subrings. Traversing a multiring feels like traversing both a cyclic linked list and a [tree], as illustrated by the following animation. Here, yellow and blue spheres represent gate and data nodes, respectively. The counter-clockwise orientation of traversal is arbitrary; we obtain it by having the normal to the plane of each ring point up and applying the [right-hand rule].
+The following animation shows how a multiring is traversed. The yellow spheres represent gate (sentinel) nodes that control the traversal of the data nodes (represented by the blue spheres).
 
-https://user-images.githubusercontent.com/59705845/208020172-4040b8f7-288c-4360-8e41-86f8dc51ea2e.mp4
+<p align ="center">
+  <img
+    src="./docs/img/multiring-traversal.gif"
+    title="multiring traversal loop"
+    alt="A loop of the counter-clockwise traversal of a multiring comprising 18 data nodes arranged in 5 rings at 3 levels"
+  >
+</p>
 
-We stipulate that the first gate node (the **root node**) may not have a parent data node who is also one of its descendents. This restriction prevents the creation of internal traversal loops, which would have the effect of removing arbitrarily many nodes from the multiring.
+The counter-clockwise orientation of traversal is arbitrary—we obtain it by having the normal to the plane of each ring point up and applying the [right-hand rule]. We chose a 3D representation to better visualize the depth of the traversal.
 
-## Usage
+Please be advised that the multiring, as implemented in this repository, hasn’t been specified and verified formally.
 
-Please see the unit tests in [*multiring.zig*][source]. The `MultiRing` API is still unstable; its basic usage is presently too verbose for high-level documentation. [Ryoko] doesn’t recommend using this module in production.
+## Importing multiring.zig
+
+Begin by placing the *multiring.zig* file into your Zig project. You may achieve this using [`git submodule`][submodules], e.g.,
+
+```console
+mkdir deps
+git submodule add https://github.com/ok-ryoko/multiring.zig deps/multiring.zig
+```
+
+Alternatively, you may clone the repository elsewhere and use a tool of your choice, e.g., [rsync], to copy the *multiring.zig* file directly to your project. This strategy is more space-efficient but requires you to manage updates to multiring.zig manually.
+
+In your *build.zig* file, add the following line (assuming you’re building an executable):
+
+```zig
+exe.addPackagePath("multiring", "path/to/multiring.zig");
+```
+
+… where `exe` is a `std.build.LibExeObjStep`. You should now be able to import multiring.zig like so:
+
+```zig
+const multiring = @import("multiring");
+const MultiRing = multiring.MultiRing;
+const MultiRingError = multiring.MultiRingError;
+```
+
+## Using multiring.zig
+
+Please see the integration test in [*multiring.zig*][source].
+
+The `MultiRing` API is still unstable; [Ryoko] doesn’t recommend using this library in production.
 
 ## Applications
 
-multiring.zig has no known applications. Ryoko wrote it to practice Zig, have fun and show linked lists some love. If you have used multiring.zig successfully in your project(s), please let us know by [starting a discussion][discussions]. (Please take time to read the [code of conduct] before starting a discussion.)
+multiring.zig has no known applications. Ryoko wrote it to practice Zig, have fun and show linked lists some love. If you have used multiring.zig successfully in your project(s), please let us know by [starting a discussion][discussions].
+
+## Community
+
+### Understanding our code of conduct
+
+Please take time to read [our code of conduct][code of conduct] before reaching out for support or making a contribution.
+
+### Getting support
+
+If you’re encountering unexpected or undesirable program behavior, check the [issue tracker] to see whether your problem has already been reported. If not, please consider taking time to create a bug report and make the community aware of the problem.
+
+If you have questions about using the program or participating in the community around the program, consider [starting a discussion][discussions].
+
+Please allow up to 1 week for a maintainer to comment on a new issue/discussion or reply to an existing issue/discussion.
+
+### Contributing to multiring.zig
+
+If you’re interested in contributing, then please read [our contributing guidelines][contributing guidelines].
 
 ## License
 
@@ -48,16 +94,30 @@ multiring.zig is free and open source software [licensed under the MIT license][
 
 ## Acknowledgements
 
-The implementation is inspired by the [`std.SinglyLinkedList`][std.SinglyLinkedList] implementation in Zig 0.9.1.
+The implementation is inspired by the implementation of [`std.SinglyLinkedList`][std.SinglyLinkedList] in Zig 0.9.1.
+
+The following resources have been instrumental in preparing this repository for community contributions:
+
+- [Open Source Guides]
+- [the GitHub documentation][GitHub documentation] and [the github/docs repository][github/docs]
+- [the tokio contributing guidelines][tokio contributing guidelines]
 
 [abstract data type]: https://en.wikipedia.org/wiki/Abstract_data_type
 [code of conduct]: ./CODE_OF_CONDUCT.md
+[contributing guidelines]: ./CONTRIBUTING.md
 [discussions]: https://github.com/ok-ryoko/multiring.zig/discussions
+[GitHub documentation]: https://docs.github.com/en
+[github/docs]: https://github.com/github/docs
+[issue tracker]: https://github.com/ok-ryoko/multiring.zig/issues
 [license]: ./LICENSE.txt
 [linked list]: https://en.wikipedia.org/wiki/Linked_list
+[Open Source Guides]: https://opensource.guide/
 [right-hand rule]: https://en.wikipedia.org/wiki/Right-hand_rule
+[rsync]: https://rsync.samba.org/
 [Ryoko]: https://github.com/ok-ryoko
 [source]: ./src/multiring.zig
 [std.SinglyLinkedList]: https://github.com/ziglang/zig/blob/0.9.1/lib/std/linked_list.zig
+[submodules]: https://git-scm.com/book/en/v2/Git-Tools-Submodules
+[tokio contributing guidelines]: https://github.com/tokio-rs/tokio/blob/d7d5d05333f7970c2d75bfb20371450b5ad838d7/CONTRIBUTING.md
 [tree]: https://en.wikipedia.org/wiki/Tree_(data_structure)
 [Zig]: https://ziglang.org/
