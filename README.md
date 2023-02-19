@@ -11,8 +11,8 @@
     src="./docs/img/multiring-github-light.png"
     title="multiring"
     alt="A multiring comprising 18 data nodes arranged in 5 rings at 3 levels"
-    align="right"
-    height="100"
+    align="left"
+    height="60"
   >
 </picture>
 
@@ -33,7 +33,7 @@ The following animation shows how a multiring is traversed. The yellow spheres r
 
 The counter-clockwise orientation of traversal is arbitrary—we obtain it by having the normal to the plane of each ring point up and applying the [right-hand rule]. We chose a 3D representation to better visualize the depth of the traversal.
 
-Please be advised that the multiring, as implemented in this repository, hasn’t been specified and verified formally.
+The multiring, as implemented in this repository, hasn’t been specified and verified formally.
 
 ## Importing multiring.zig
 
@@ -78,11 +78,11 @@ Please take time to read [our code of conduct][code of conduct] before reaching 
 
 ### Getting support
 
-If you’re encountering unexpected or undesirable program behavior, check the [issue tracker] to see whether your problem has already been reported. If not, please consider taking time to create a bug report and make the community aware of the problem.
+If you’re encountering unexpected or undesirable program behavior, check the [issue tracker] to see whether your problem has already been reported. If not, please consider taking time to create a bug report.
 
 If you have questions about using the program or participating in the community around the program, consider [starting a discussion][discussions].
 
-Please allow up to 1 week for a maintainer to comment on a new issue/discussion or reply to an existing issue/discussion.
+Please allow up to 1 week for a maintainer to reply to an issue or discussion.
 
 ### Contributing to multiring.zig
 
