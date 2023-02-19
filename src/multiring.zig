@@ -13,6 +13,7 @@ pub fn MultiRing(comptime T: type) type {
             gate: *GateNode,
             data: *DataNode,
 
+            /// Insert a new data node after the current node
             pub fn insertAfter(self: Node, new_node: *DataNode) void {
                 switch (self) {
                     .gate => |s| {
@@ -24,6 +25,9 @@ pub fn MultiRing(comptime T: type) type {
                 }
             }
 
+            /// Remove and return the next data node from the current ring;
+            /// return null when the next node is a gate node, i.e., the ring
+            /// is empty
             pub fn popNext(self: Node) ?*DataNode {
                 return switch (self) {
                     .gate => |s| s.popNext(),
@@ -31,6 +35,8 @@ pub fn MultiRing(comptime T: type) type {
                 };
             }
 
+            /// Step forward by one node, traversing only the data nodes of
+            /// the multiring as if it were a cyclic linked list
             pub fn step(self: Node) Node {
                 return switch (self) {
                     .gate => |s| s.step(),
@@ -39,7 +45,8 @@ pub fn MultiRing(comptime T: type) type {
             }
         };
 
-        /// Node that acts as an entry point into a possibly empty ring
+        /// Sentinel node that acts as a waypoint into and out of a possibly
+        /// empty ring
         pub const GateNode = struct {
             next: ?*DataNode = null,
             parent: ?*DataNode = null,
@@ -65,8 +72,6 @@ pub fn MultiRing(comptime T: type) type {
                 return next_node;
             }
 
-            /// Step forward by one node, traversing the multiring as if it 
-            /// were a cyclic linked list
             pub fn step(node: *GateNode) Node {
                 if (node.next) |next_node| {
                     return .{ .data = next_node };
@@ -131,6 +136,8 @@ pub fn MultiRing(comptime T: type) type {
                 }
             }
 
+            /// Remove and return the subring attached to this data node;
+            /// return null when there's no subring
             pub fn popSubring(node: *DataNode) ?*GateNode {
                 return if (node.child) |gate_node| blk: {
                     node.child = null;
@@ -142,7 +149,7 @@ pub fn MultiRing(comptime T: type) type {
 
         root: ?*GateNode = null,
 
-        /// Remove a data node from the ring, returning true if the node was 
+        /// Remove a data node from the ring; return true if the node was
         /// found and removed and otherwise false
         pub fn remove(ring: *Self, node: *DataNode) bool {
             if (ring.root.?.next.? == node) {
@@ -160,7 +167,7 @@ pub fn MultiRing(comptime T: type) type {
             var iterator: Node = .{ .data = ring.root.?.next.? };
             while (true) {
                 // Once we're in this loop, the iterator will never stop at a
-                // gate node according to the behaviour of Node.step()
+                // gate node according to the behavior of Node.step()
                 //
                 switch (iterator) {
                     .gate => {
@@ -187,6 +194,8 @@ pub fn MultiRing(comptime T: type) type {
             }
         }
 
+        /// Link a gate node with no parent to a data node with no child;
+        /// the gate node must not be the root node
         pub fn attachSubring(ring: *Self, node: *DataNode, gate: *GateNode) !void {
             if (node.child != null) {
                 return RingError.DataNodeAlreadyHasChild;
