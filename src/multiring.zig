@@ -1,4 +1,4 @@
-const RingError = error{
+pub const MultiRingError = error{
     DataNodeAlreadyHasChild,
     GateNodeAlreadyHasParent,
     UnsafeLoopCreationAttempt,
@@ -198,11 +198,11 @@ pub fn MultiRing(comptime T: type) type {
         /// the gate node must not be the root node
         pub fn attachSubring(ring: *Self, node: *DataNode, gate: *GateNode) !void {
             if (node.child != null) {
-                return RingError.DataNodeAlreadyHasChild;
+                return MultiRingError.DataNodeAlreadyHasChild;
             } else if (gate.parent != null) {
-                return RingError.GateNodeAlreadyHasParent;
+                return MultiRingError.GateNodeAlreadyHasParent;
             } else if (gate == ring.root) {
-                return RingError.UnsafeLoopCreationAttempt;
+                return MultiRingError.UnsafeLoopCreationAttempt;
             }
 
             node.child = gate;
@@ -348,15 +348,15 @@ test "fundamental operations" {
 
     // try to attach subrings inappropriately
     try testing.expectError(
-        RingError.DataNodeAlreadyHasChild,
+        MultiRingError.DataNodeAlreadyHasChild,
         multiring.attachSubring(&r0_data_nodes[0], &g3),
     );
     try testing.expectError(
-        RingError.GateNodeAlreadyHasParent,
+        MultiRingError.GateNodeAlreadyHasParent,
         multiring.attachSubring(&r1_data_nodes[0], &g2),
     );
     try testing.expectError(
-        RingError.UnsafeLoopCreationAttempt,
+        MultiRingError.UnsafeLoopCreationAttempt,
         multiring.attachSubring(&r1_data_nodes[0], &g0),
     );
 }
