@@ -89,6 +89,16 @@ pub fn MultiRing(comptime T: type) type {
                 node.next = new_node;
             }
 
+            /// Insert a data node after the last data node in the current ring
+            pub fn append(node: *GateNode, new_node: *DataNode) void {
+                if (node.next) |next_node| {
+                    const last = next_node.findLastLocal();
+                    last.insertAfter(new_node);
+                } else {
+                    node.insertAfter(new_node);
+                }
+            }
+
             pub fn popNext(node: *GateNode) ?*DataNode {
                 const next_node = node.next orelse return null;
                 node.next = switch (next_node.next.?) {
@@ -257,6 +267,11 @@ pub fn MultiRing(comptime T: type) type {
         /// multiring is empty
         pub fn findLast(ring: *Self) ?*DataNode {
             return ring.root.?.findLastLocal();
+        }
+
+        /// Append a data node to the end of the multiring
+        pub fn append(ring: *Self, node: *DataNode) void {
+            ring.root.?.append(node);
         }
 
         /// Remove a data node from the ring; return true if the node was
@@ -450,6 +465,16 @@ test "fundamental operations" {
     try testing.expectEqual(@as(?*M.GateNode, null), r2_data_nodes[1].child);
     try testing.expectEqual(@as(?*M.DataNode, null), g3.parent);
     try testing.expectEqual(&r2_data_nodes[2], r2_data_nodes[1].step());
+
+    // append a new node to the end of the multiring
+    var r = M.DataNode{ .data = 0 };
+    multiring.append(&r);
+    try testing.expectEqual(&r, multiring.findLast().?);
+
+    // append a new node to the end of r1
+    var s = M.DataNode{ .data = 1 };
+    g1.append(&s);
+    try testing.expectEqual(&s, g1.findLastLocal().?);
 
     // try to attach subrings inappropriately
     try testing.expectError(
