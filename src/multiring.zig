@@ -51,6 +51,24 @@ pub fn MultiRing(comptime T: type) type {
                     .data => |s| s.stepLocal(),
                 };
             }
+
+            /// Find the last data node in the multiring from any node; return
+            /// null if the multiring is empty
+            pub fn findLast(self: Node) ?*DataNode {
+                return switch (self) {
+                    .gate => |s| s.findLast(),
+                    .data => |s| s.findLast(),
+                };
+            }
+
+            /// Find the last data node in the current ring; return null if the
+            /// ring is empty
+            pub fn findLastLocal(self: Node) ?*DataNode {
+                return switch (self) {
+                    .gate => |s| s.findLastLocal(),
+                    .data => |s| s.findLastLocal(),
+                };
+            }
         };
 
         /// Sentinel node that acts as a waypoint into and out of a possibly
@@ -98,6 +116,42 @@ pub fn MultiRing(comptime T: type) type {
                     }
                 } else {
                     return node.next orelse null;
+                }
+            }
+
+            pub fn findLast(node: *GateNode) ?*DataNode {
+                if (node.next) |next_node| {
+                    var it = next_node;
+                    while (true) {
+                        switch (it.next.?) {
+                            .gate => |g| {
+                                if (g.parent == null) {
+                                    return it;
+                                }
+                            },
+                            .data => {},
+                        }
+                        it = it.step();
+                    }
+                } else {
+                    return null;
+                }
+            }
+
+            pub fn findLastLocal(node: *GateNode) ?*DataNode {
+                if (node.next) |next_node| {
+                    var it = next_node;
+                    while (true) {
+                        switch (it.next.?) {
+                            .gate => {
+                                return it;
+                            },
+                            .data => {},
+                        }
+                        it = it.stepLocal();
+                    }
+                } else {
+                    return null;
                 }
             }
         };
@@ -158,6 +212,34 @@ pub fn MultiRing(comptime T: type) type {
                 }
             }
 
+            pub fn findLast(node: *DataNode) *DataNode {
+                var it = node;
+                while (true) {
+                    switch (it.next.?) {
+                        .gate => |g| {
+                            if (g.parent == null) {
+                                return it;
+                            }
+                        },
+                        .data => {},
+                    }
+                    it = it.step();
+                }
+            }
+
+            pub fn findLastLocal(node: *DataNode) *DataNode {
+                var it = node;
+                while (true) {
+                    switch (it.next.?) {
+                        .gate => {
+                            return it;
+                        },
+                        .data => {},
+                    }
+                    it = it.stepLocal();
+                }
+            }
+
             /// Remove and return the subring attached to this data node;
             /// return null when there's no subring
             pub fn popSubring(node: *DataNode) ?*GateNode {
@@ -170,6 +252,12 @@ pub fn MultiRing(comptime T: type) type {
         };
 
         root: ?*GateNode = null,
+
+        /// Find the last data node in the multiring; return null if the
+        /// multiring is empty
+        pub fn findLast(ring: *Self) ?*DataNode {
+            return ring.root.?.findLastLocal();
+        }
 
         /// Remove a data node from the ring; return true if the node was
         /// found and removed and otherwise false
@@ -322,6 +410,18 @@ test "fundamental operations" {
 
     // loop back from the last data node to the first data node in r1
     try testing.expectEqual(&r1_data_nodes[0], r1_data_nodes[5].stepLocal());
+
+    // find the last data node in the multiring
+    try testing.expectEqual(&r0_data_nodes[3], multiring.findLast().?);
+    try testing.expectEqual(&r0_data_nodes[3], g0.findLast().?);
+    try testing.expectEqual(&r0_data_nodes[3], r2_data_nodes[0].findLast());
+
+    // find the last data node in r1
+    try testing.expectEqual(&r1_data_nodes[5], g1.findLastLocal().?);
+    try testing.expectEqual(&r1_data_nodes[5], r1_data_nodes[0].findLastLocal());
+
+    // find the last data node in r4 (there isn't one)
+    try testing.expectEqual(@as(?*M.DataNode, null), g4.findLastLocal());
 
     // remove a data node in the multiring (in r3)
     try testing.expect(multiring.remove(&r3_data_nodes[2]));
