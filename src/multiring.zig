@@ -37,7 +37,7 @@ pub fn MultiRing(comptime T: type) type {
 
             /// Step forward by one node, traversing only the data nodes of
             /// the multiring as if it were a cyclic linked list
-            pub fn step(self: Node) Node {
+            pub fn step(self: Node) ?*DataNode {
                 return switch (self) {
                     .gate => |s| s.step(),
                     .data => |s| s.step(),
@@ -45,7 +45,7 @@ pub fn MultiRing(comptime T: type) type {
             }
 
             /// Same as Node.step() but never leaves the current ring
-            pub fn stepLocal(self: Node) Node {
+            pub fn stepLocal(self: Node) ?*DataNode {
                 return switch (self) {
                     .gate => |s| s.step(),
                     .data => |s| s.stepLocal(),
@@ -80,11 +80,24 @@ pub fn MultiRing(comptime T: type) type {
                 return next_node;
             }
 
-            pub fn step(node: *GateNode) Node {
-                if (node.next) |next_node| {
-                    return .{ .data = next_node };
+            pub fn step(node: *GateNode) ?*DataNode {
+                return if (node.next) |next_node| next_node else null;
+            }
+
+            /// Exit the ring and return the next data node; return null if the
+            /// ring is empty
+            pub fn exit(node: *GateNode) ?*DataNode {
+                if (node.parent) |parent| {
+                    switch (parent.next.?) {
+                        .gate => |g| {
+                            return g.exit();
+                        },
+                        .data => |d| {
+                            return d;
+                        },
+                    }
                 } else {
-                    return .{ .gate = node };
+                    return node.next orelse null;
                 }
             }
         };
@@ -114,43 +127,33 @@ pub fn MultiRing(comptime T: type) type {
                 }
             }
 
-            pub fn step(node: *DataNode) Node {
+            pub fn step(node: *DataNode) *DataNode {
                 // If this node has a child gate node of a ring containing at
                 // least one data node, then go to the first data node in the
                 // subring; otherwise, go to the next data node at this level
                 //
                 const child = node.child;
                 if (child != null and child.?.next != null) {
-                    return .{ .data = child.?.next.? };
+                    return child.?.next.?;
                 } else {
                     switch (node.next.?) {
                         .gate => |next_node| {
-                            if (next_node.parent) |parent| {
-                                // The next node is a gate node with a parent data node, so
-                                // go to the next data node in the upper level
-                                //
-                                return parent.next.?;
-                            } else {
-                                // The next node is the last gate node in the multiring, so
-                                // go to the first data node after the root node
-                                //
-                                return .{ .data = next_node.next.? };
-                            }
+                            return next_node.exit().?;
                         },
                         .data => |next_node| {
-                            return .{ .data = next_node };
+                            return next_node;
                         },
                     }
                 }
             }
 
-            pub fn stepLocal(node: *DataNode) Node {
+            pub fn stepLocal(node: *DataNode) *DataNode {
                 switch (node.next.?) {
                     .gate => |next_node| {
-                        return .{ .data = next_node.next.? };
+                        return next_node.next.?;
                     },
                     .data => |next_node| {
-                        return .{ .data = next_node };
+                        return next_node;
                     },
                 }
             }
@@ -183,33 +186,23 @@ pub fn MultiRing(comptime T: type) type {
                 return true;
             }
 
-            var iterator: Node = .{ .data = ring.root.?.next.? };
+            var it = ring.root.?.next.?;
             while (true) {
-                // Once we're in this loop, the iterator will never stop at a
-                // gate node according to the behavior of Node.step()
-                //
-                switch (iterator) {
-                    .gate => {
-                        unreachable;
-                    },
-                    .data => |it| {
-                        switch (it.next.?) {
-                            .gate => |next_node| {
-                                if (next_node == ring.root.?) {
-                                    return false;
-                                }
-                            },
-                            .data => |next_node| {
-                                if (next_node == node) {
-                                    it.next = node.next;
-                                    next_node.next = null;
-                                    return true;
-                                }
-                            },
+                switch (it.next.?) {
+                    .gate => |next_node| {
+                        if (next_node == ring.root.?) {
+                            return false;
                         }
-                        iterator = iterator.step();
+                    },
+                    .data => |next_node| {
+                        if (next_node == node) {
+                            it.next = node.next;
+                            next_node.next = null;
+                            return true;
+                        }
                     },
                 }
+                it = it.step();
             }
         }
 
@@ -309,46 +302,26 @@ test "fundamental operations" {
     try multiring.attachSubring(&r2_data_nodes[3], &g4);
 
     // step forward to the first data node
-    try testing.expectEqual(
-        M.Node{ .data = &r0_data_nodes[0] },
-        g0.step(),
-    );
+    try testing.expectEqual(&r0_data_nodes[0], g0.step().?);
 
     // descend into subring r1
-    try testing.expectEqual(
-        M.Node{ .data = &r1_data_nodes[0] },
-        r0_data_nodes[0].step(),
-    );
+    try testing.expectEqual(&r1_data_nodes[0], r0_data_nodes[0].step());
 
-    // ascend from r1
-    try testing.expectEqual(
-        M.Node{ .data = &r0_data_nodes[1] },
-        r1_data_nodes[5].step(),
-    );
+    // exit r1
+    try testing.expectEqual(&r0_data_nodes[1], r1_data_nodes[5].step());
+    try testing.expectEqual(&r0_data_nodes[1], g1.exit().?);
 
     // skip over an empty subring (r4)
-    try testing.expectEqual(
-        M.Node{ .data = &r2_data_nodes[4] },
-        r2_data_nodes[3].step(),
-    );
+    try testing.expectEqual(&r2_data_nodes[4], r2_data_nodes[3].step());
 
     // loop back from the last data node to the first data node
-    try testing.expectEqual(
-        M.Node{ .data = &r0_data_nodes[0] },
-        r0_data_nodes[3].step(),
-    );
+    try testing.expectEqual(&r0_data_nodes[0], r0_data_nodes[3].step());
 
     // step forward from the 1st data node to the 2nd data node in r1
-    try testing.expectEqual(
-        M.Node{ .data = &r1_data_nodes[1] },
-        r1_data_nodes[0].stepLocal(),
-    );
+    try testing.expectEqual(&r1_data_nodes[1], r1_data_nodes[0].stepLocal());
 
     // loop back from the last data node to the first data node in r1
-    try testing.expectEqual(
-        M.Node{ .data = &r1_data_nodes[0] },
-        r1_data_nodes[5].stepLocal(),
-    );
+    try testing.expectEqual(&r1_data_nodes[0], r1_data_nodes[5].stepLocal());
 
     // remove a data node in the multiring (in r3)
     try testing.expect(multiring.remove(&r3_data_nodes[2]));
@@ -376,7 +349,7 @@ test "fundamental operations" {
     try testing.expectEqual(&g3, r2_data_nodes[1].popSubring().?);
     try testing.expectEqual(@as(?*M.GateNode, null), r2_data_nodes[1].child);
     try testing.expectEqual(@as(?*M.DataNode, null), g3.parent);
-    try testing.expectEqual(M.Node{ .data = &r2_data_nodes[2] }, r2_data_nodes[1].step());
+    try testing.expectEqual(&r2_data_nodes[2], r2_data_nodes[1].step());
 
     // try to attach subrings inappropriately
     try testing.expectError(
@@ -391,4 +364,37 @@ test "fundamental operations" {
         MultiRingError.UnsafeLoopCreationAttempt,
         multiring.attachSubring(&r1_data_nodes[0], &g0),
     );
+}
+
+test "try to exit an empty ring" {
+    const std = @import("std");
+    const testing = std.testing;
+    const M = MultiRing(u8);
+    var g0 = M.GateNode{};
+    try testing.expectEqual(@as(?*M.DataNode, null), g0.exit());
+}
+
+test "exit, skipping an intermediate ring" {
+    const std = @import("std");
+    const testing = std.testing;
+
+    const M = MultiRing(u8);
+
+    var g0 = M.GateNode{};
+    var d0: M.DataNode = .{ .data = 0 };
+    g0.insertAfter(&d0);
+
+    var g1 = M.GateNode{};
+    var d1: M.DataNode = .{ .data = 1 };
+    g1.insertAfter(&d1);
+
+    var g2 = M.GateNode{};
+    var d2: M.DataNode = .{ .data = 2 };
+    g2.insertAfter(&d2);
+
+    var multiring = M{ .root = &g0 };
+    try multiring.attachSubring(&d0, &g1);
+    try multiring.attachSubring(&d1, &g2);
+
+    try testing.expectEqual(&d0, g2.exit().?);
 }
