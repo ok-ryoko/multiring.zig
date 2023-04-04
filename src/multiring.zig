@@ -16,10 +16,7 @@ pub fn MultiRing(comptime T: type) type {
             /// Insert a new data node after the current node
             pub fn insertAfter(self: Node, new_node: *DataNode) void {
                 switch (self) {
-                    .gate => |s| {
-                        s.insertAfter(new_node);
-                    },
-                    .data => |s| {
+                    inline else => |s| {
                         s.insertAfter(new_node);
                     },
                 }
@@ -30,8 +27,7 @@ pub fn MultiRing(comptime T: type) type {
             /// is empty
             pub fn popNext(self: Node) ?*DataNode {
                 return switch (self) {
-                    .gate => |s| s.popNext(),
-                    .data => |s| s.popNext(),
+                    inline else => |s| s.popNext(),
                 };
             }
 
@@ -39,16 +35,14 @@ pub fn MultiRing(comptime T: type) type {
             /// the multiring as if it were a cyclic linked list
             pub fn step(self: Node) ?*DataNode {
                 return switch (self) {
-                    .gate => |s| s.step(),
-                    .data => |s| s.step(),
+                    inline else => |s| s.step(),
                 };
             }
 
             /// Same as Node.step() but never leaves the current ring
             pub fn stepLocal(self: Node) ?*DataNode {
                 return switch (self) {
-                    .gate => |s| s.stepLocal(),
-                    .data => |s| s.stepLocal(),
+                    inline else => |s| s.stepLocal(),
                 };
             }
 
@@ -56,8 +50,7 @@ pub fn MultiRing(comptime T: type) type {
             /// ring is empty
             pub fn findLastLocal(self: Node) ?*DataNode {
                 return switch (self) {
-                    .gate => |s| s.findLastLocal(),
-                    .data => |s| s.findLastLocal(),
+                    inline else => |s| s.findLastLocal(),
                 };
             }
         };
