@@ -18,12 +18,16 @@ test "empty multirings" {
     var m0 = M{ .root = null };
     try expectNull(m0.findLast());
 
+    var d0 = M.DataNode{ .data = 0 };
+    try testing.expect(!m0.remove(&d0));
+
     var g0 = M.GateNode{};
     var m1 = M{ .root = &g0 };
     try expectNull(m1.findLast());
     try expectNull(m1.root.?.step());
     try expectNull(m1.root.?.stepLocal());
     try expectNull(m1.root.?.popNext());
+    try testing.expect(!m1.remove(&d0));
 }
 
 test "fundamental operations" {
@@ -203,4 +207,5 @@ test "ring skips" {
 
     try testing.expectEqual(&d0, d2.step());
     try testing.expectEqual(&d2, m0.findLast().?);
+    try testing.expect(m0.remove(&d2));
 }

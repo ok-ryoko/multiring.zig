@@ -231,32 +231,55 @@ pub fn MultiRing(comptime T: type) type {
         /// Remove a data node from the ring; return true if the node was
         /// found and removed and otherwise false
         pub fn remove(ring: *Self, node: *DataNode) bool {
-            if (ring.root.?.next.? == node) {
-                switch (node.next.?) {
-                    .gate => ring.root.?.next = null,
-                    .data => |next_node| ring.root.?.next = next_node,
-                }
-                return true;
-            }
-
-            var it = ring.root.?.next.?;
-            while (true) {
-                switch (it.next.?) {
-                    .gate => |next_node| {
-                        if (next_node == ring.root.?) {
+            var result = false;
+            if ((ring.root != null) and (ring.root.?.next != null)) {
+                const root = ring.root.?;
+                const root_next = root.next.?;
+                if (root_next == node) {
+                    root.next = switch (node.next.?) {
+                        .gate => null,
+                        .data => |next_node| next_node,
+                    };
+                } else {
+                    var it = root_next;
+                    while ((it.step() != node)) {
+                        if (it.step() == root_next) {
+                            // We have traversed the structure without
+                            // finding the given node
+                            //
                             return false;
                         }
-                    },
-                    .data => |next_node| {
-                        if (next_node == node) {
-                            it.next = node.next;
-                            next_node.next = null;
-                            return true;
+                        it = it.step();
+                    }
+
+                    if (it.child) |child| {
+                        if (child.next == it.step()) {
+                            child.next = switch (node.next.?) {
+                                .gate => null,
+                                .data => |next_node_| next_node_,
+                            };
                         }
-                    },
+                    } else {
+                        switch (it.next.?) {
+                            .gate => |*gate_it| {
+                                while (true) {
+                                    switch (gate_it.*.parent.?.next.?) {
+                                        .gate => |g| gate_it.* = g,
+                                        .data => {
+                                            gate_it.*.parent.?.next = node.next;
+                                            break;
+                                        },
+                                    }
+                                }
+                            },
+                            .data => it.next = node.next,
+                        }
+                    }
                 }
-                it = it.step();
+                node.next = null;
+                result = true;
             }
+            return result;
         }
 
         /// Find the last data node in the multiring; return null if the
