@@ -276,9 +276,12 @@ pub fn MultiRing(comptime T: type) type {
         /// Find the last data node in the multiring; return null if the
         /// multiring is empty
         pub fn findLast(ring: *Self) ?*DataNode {
-            var it = ring.root.?.findLastLocal();
-            while ((it != null) and (it.?.child != null)) {
-                it = it.?.child.?.findLastLocal();
+            var it: ?*DataNode = null;
+            if (ring.root) |root| {
+                it = root.findLastLocal();
+                while ((it != null) and (it.?.child != null)) {
+                    it = it.?.child.?.findLastLocal();
+                }
             }
             return it;
         }
@@ -298,6 +301,23 @@ pub fn MultiRing(comptime T: type) type {
             gate.parent = node;
         }
     };
+}
+
+test "empty multirings" {
+    const std = @import("std");
+    const testing = std.testing;
+
+    const M = MultiRing(u8);
+
+    var m0 = M{ .root = null };
+    try testing.expectEqual(@as(?*M.DataNode, null), m0.findLast());
+
+    var g0 = M.GateNode{};
+    var m1 = M{ .root = &g0 };
+    try testing.expectEqual(@as(?*M.DataNode, null), m1.findLast());
+    try testing.expectEqual(@as(?*M.DataNode, null), m1.root.?.step());
+    try testing.expectEqual(@as(?*M.DataNode, null), m1.root.?.stepLocal());
+    try testing.expectEqual(@as(?*M.DataNode, null), m1.root.?.popNext());
 }
 
 test "fundamental operations" {
