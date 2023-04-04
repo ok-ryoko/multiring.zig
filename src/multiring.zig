@@ -16,9 +16,7 @@ pub fn MultiRing(comptime T: type) type {
             /// Insert a new data node after the current node
             pub fn insertAfter(self: Node, new_node: *DataNode) void {
                 switch (self) {
-                    inline else => |s| {
-                        s.insertAfter(new_node);
-                    },
+                    inline else => |s| s.insertAfter(new_node),
                 }
             }
 
@@ -100,12 +98,8 @@ pub fn MultiRing(comptime T: type) type {
                     while (true) {
                         if (gate_it.parent) |gate_parent| {
                             switch (gate_parent.next.?) {
-                                .gate => |g| {
-                                    gate_it = g;
-                                },
-                                .data => |d| {
-                                    return d;
-                                },
+                                .gate => |g| gate_it = g,
+                                .data => |d| return d,
                             }
                         } else {
                             // We've reached the root node, so return the
@@ -147,9 +141,7 @@ pub fn MultiRing(comptime T: type) type {
 
             pub fn popNext(node: *DataNode) ?*DataNode {
                 switch (node.next.?) {
-                    .gate => {
-                        return null;
-                    },
+                    .gate => return null,
                     .data => |next_node| {
                         node.next = next_node.next;
                         return next_node;
@@ -171,46 +163,32 @@ pub fn MultiRing(comptime T: type) type {
                             while (true) {
                                 if (gate_it.*.parent) |parent| {
                                     switch (parent.next.?) {
-                                        .gate => |g| {
-                                            gate_it.* = g;
-                                        },
-                                        .data => |d| {
-                                            return d;
-                                        },
+                                        .gate => |g| gate_it.* = g,
+                                        .data => |d| return d,
                                     }
                                 } else {
                                     return gate_it.*.next.?;
                                 }
                             }
                         },
-                        .data => |next_node| {
-                            return next_node;
-                        },
+                        .data => |next_node| return next_node,
                     }
                 }
             }
 
             pub fn stepLocal(node: *DataNode) *DataNode {
-                switch (node.next.?) {
-                    .gate => |next_node| {
-                        return next_node.next.?;
-                    },
-                    .data => |next_node| {
-                        return next_node;
-                    },
-                }
+                return switch (node.next.?) {
+                    .gate => |next_node| next_node.next.?,
+                    .data => |next_node| next_node,
+                };
             }
 
             pub fn findLastLocal(node: *DataNode) *DataNode {
                 var it = node;
                 while (true) {
                     switch (it.next.?) {
-                        .gate => {
-                            return it;
-                        },
-                        .data => {
-                            it = it.stepLocal();
-                        },
+                        .gate => return it,
+                        .data => it = it.stepLocal(),
                     }
                 }
             }
@@ -243,12 +221,8 @@ pub fn MultiRing(comptime T: type) type {
         pub fn remove(ring: *Self, node: *DataNode) bool {
             if (ring.root.?.next.? == node) {
                 switch (node.next.?) {
-                    .gate => {
-                        ring.root.?.next = null;
-                    },
-                    .data => |next_node| {
-                        ring.root.?.next = next_node;
-                    },
+                    .gate => ring.root.?.next = null,
+                    .data => |next_node| ring.root.?.next = next_node,
                 }
                 return true;
             }
