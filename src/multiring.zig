@@ -82,35 +82,40 @@ pub fn MultiRing(comptime T: type) type {
             }
 
             pub fn popNext(node: *GateNode) ?*DataNode {
-                const next_node = node.next orelse return null;
-                node.next = switch (next_node.next.?) {
-                    .gate => null,
-                    .data => |next_next_node| next_next_node,
-                };
-                return next_node;
+                return if (node.next) |next_node| blk: {
+                    node.next = switch (next_node.next.?) {
+                        .gate => null,
+                        .data => |next_next_node| next_next_node,
+                    };
+                    break :blk next_node;
+                } else null;
             }
 
             pub fn step(node: *GateNode) ?*DataNode {
+                var result: ?*DataNode = null;
                 if (node.next) |next_node| {
-                    return next_node;
+                    result = next_node;
                 } else if (node.parent != null) {
                     var gate_it = node;
                     while (true) {
                         if (gate_it.parent) |gate_parent| {
                             switch (gate_parent.next.?) {
                                 .gate => |g| gate_it = g,
-                                .data => |d| return d,
+                                .data => |d| {
+                                    result = d;
+                                    break;
+                                },
                             }
                         } else {
                             // We've reached the root node, so return the
                             // first data node
                             //
-                            return gate_it.next.?;
+                            result = gate_it.next.?;
+                            break;
                         }
                     }
-                } else {
-                    return null;
                 }
+                return result;
             }
 
             pub fn stepLocal(node: *GateNode) ?*DataNode {
@@ -136,13 +141,13 @@ pub fn MultiRing(comptime T: type) type {
             }
 
             pub fn popNext(node: *DataNode) ?*DataNode {
-                switch (node.next.?) {
-                    .gate => return null,
-                    .data => |next_node| {
+                return switch (node.next.?) {
+                    .gate => null,
+                    .data => |next_node| blk: {
                         node.next = next_node.next;
-                        return next_node;
+                        break :blk next_node;
                     },
-                }
+                };
             }
 
             pub fn step(node: *DataNode) *DataNode {
@@ -150,9 +155,10 @@ pub fn MultiRing(comptime T: type) type {
                 // least one data node, then go to the first data node in the
                 // subring; otherwise, go to the next data node
                 //
+                var result: ?*DataNode = null;
                 const child = node.child;
                 if (child != null and child.?.next != null) {
-                    return child.?.next.?;
+                    result = child.?.next.?;
                 } else {
                     switch (node.next.?) {
                         .gate => |*gate_it| {
@@ -160,16 +166,21 @@ pub fn MultiRing(comptime T: type) type {
                                 if (gate_it.*.parent) |parent| {
                                     switch (parent.next.?) {
                                         .gate => |g| gate_it.* = g,
-                                        .data => |d| return d,
+                                        .data => |d| {
+                                            result = d;
+                                            break;
+                                        },
                                     }
                                 } else {
-                                    return gate_it.*.next.?;
+                                    result = gate_it.*.next.?;
+                                    break;
                                 }
                             }
                         },
-                        .data => |next_node| return next_node,
+                        .data => |next_node| result = next_node,
                     }
                 }
+                return result.?;
             }
 
             pub fn stepLocal(node: *DataNode) *DataNode {
@@ -180,13 +191,18 @@ pub fn MultiRing(comptime T: type) type {
             }
 
             pub fn findLastLocal(node: *DataNode) *DataNode {
+                var result: ?*DataNode = null;
                 var it = node;
                 while (true) {
                     switch (it.next.?) {
-                        .gate => return it,
+                        .gate => {
+                            result = it;
+                            break;
+                        },
                         .data => it = it.stepLocal(),
                     }
                 }
+                return result.?;
             }
 
             /// Remove and return the subring attached to this data node;
