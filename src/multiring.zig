@@ -47,17 +47,8 @@ pub fn MultiRing(comptime T: type) type {
             /// Same as Node.step() but never leaves the current ring
             pub fn stepLocal(self: Node) ?*DataNode {
                 return switch (self) {
-                    .gate => |s| s.step(),
+                    .gate => |s| s.stepLocal(),
                     .data => |s| s.stepLocal(),
-                };
-            }
-
-            /// Find the last data node in the multiring from any node; return
-            /// null if the multiring is empty
-            pub fn findLast(self: Node) ?*DataNode {
-                return switch (self) {
-                    .gate => |s| s.findLast(),
-                    .data => |s| s.findLast(),
                 };
             }
 
@@ -109,57 +100,39 @@ pub fn MultiRing(comptime T: type) type {
             }
 
             pub fn step(node: *GateNode) ?*DataNode {
-                return if (node.next) |next_node| next_node else null;
-            }
-
-            /// Exit the ring and return the next data node; return null if the
-            /// ring is empty
-            pub fn exit(node: *GateNode) ?*DataNode {
-                if (node.parent) |parent| {
-                    switch (parent.next.?) {
-                        .gate => |g| {
-                            return g.exit();
-                        },
-                        .data => |d| {
-                            return d;
-                        },
-                    }
-                } else {
-                    return node.next orelse null;
-                }
-            }
-
-            pub fn findLast(node: *GateNode) ?*DataNode {
                 if (node.next) |next_node| {
-                    var it = next_node;
+                    return next_node;
+                } else if (node.parent != null) {
+                    var gate_it = node;
                     while (true) {
-                        switch (it.next.?) {
-                            .gate => |g| {
-                                if (g.parent == null) {
-                                    return it;
-                                }
-                            },
-                            .data => {},
+                        if (gate_it.parent) |gate_parent| {
+                            switch (gate_parent.next.?) {
+                                .gate => |g| {
+                                    gate_it = g;
+                                },
+                                .data => |d| {
+                                    return d;
+                                },
+                            }
+                        } else {
+                            // We've reached the root node, so return the
+                            // first data node
+                            //
+                            return gate_it.next.?;
                         }
-                        it = it.step();
                     }
                 } else {
                     return null;
                 }
             }
 
+            pub fn stepLocal(node: *GateNode) ?*DataNode {
+                return if (node.next) |next_node| next_node else null;
+            }
+
             pub fn findLastLocal(node: *GateNode) ?*DataNode {
                 if (node.next) |next_node| {
-                    var it = next_node;
-                    while (true) {
-                        switch (it.next.?) {
-                            .gate => {
-                                return it;
-                            },
-                            .data => {},
-                        }
-                        it = it.stepLocal();
-                    }
+                    return next_node.findLastLocal();
                 } else {
                     return null;
                 }
@@ -194,15 +167,28 @@ pub fn MultiRing(comptime T: type) type {
             pub fn step(node: *DataNode) *DataNode {
                 // If this node has a child gate node of a ring containing at
                 // least one data node, then go to the first data node in the
-                // subring; otherwise, go to the next data node at this level
+                // subring; otherwise, go to the next data node
                 //
                 const child = node.child;
                 if (child != null and child.?.next != null) {
                     return child.?.next.?;
                 } else {
                     switch (node.next.?) {
-                        .gate => |next_node| {
-                            return next_node.exit().?;
+                        .gate => |*gate_it| {
+                            while (true) {
+                                if (gate_it.*.parent) |parent| {
+                                    switch (parent.next.?) {
+                                        .gate => |g| {
+                                            gate_it.* = g;
+                                        },
+                                        .data => |d| {
+                                            return d;
+                                        },
+                                    }
+                                } else {
+                                    return gate_it.*.next.?;
+                                }
+                            }
                         },
                         .data => |next_node| {
                             return next_node;
@@ -222,21 +208,6 @@ pub fn MultiRing(comptime T: type) type {
                 }
             }
 
-            pub fn findLast(node: *DataNode) *DataNode {
-                var it = node;
-                while (true) {
-                    switch (it.next.?) {
-                        .gate => |g| {
-                            if (g.parent == null) {
-                                return it;
-                            }
-                        },
-                        .data => {},
-                    }
-                    it = it.step();
-                }
-            }
-
             pub fn findLastLocal(node: *DataNode) *DataNode {
                 var it = node;
                 while (true) {
@@ -244,9 +215,10 @@ pub fn MultiRing(comptime T: type) type {
                         .gate => {
                             return it;
                         },
-                        .data => {},
+                        .data => {
+                            it = it.stepLocal();
+                        },
                     }
-                    it = it.stepLocal();
                 }
             }
 
@@ -263,15 +235,14 @@ pub fn MultiRing(comptime T: type) type {
 
         root: ?*GateNode = null,
 
-        /// Find the last data node in the multiring; return null if the
-        /// multiring is empty
-        pub fn findLast(ring: *Self) ?*DataNode {
-            return ring.root.?.findLastLocal();
-        }
-
         /// Append a data node to the end of the multiring
         pub fn append(ring: *Self, node: *DataNode) void {
-            ring.root.?.append(node);
+            const last = ring.findLast();
+            if (last != null) {
+                last.?.insertAfter(node);
+            } else {
+                ring.root.?.insertAfter(node);
+            }
         }
 
         /// Remove a data node from the ring; return true if the node was
@@ -307,6 +278,16 @@ pub fn MultiRing(comptime T: type) type {
                 }
                 it = it.step();
             }
+        }
+
+        /// Find the last data node in the multiring; return null if the
+        /// multiring is empty
+        pub fn findLast(ring: *Self) ?*DataNode {
+            var it = ring.root.?.findLastLocal();
+            while ((it != null) and (it.?.child != null)) {
+                it = it.?.child.?.findLastLocal();
+            }
+            return it;
         }
 
         /// Link a gate node with no parent to a data node with no child;
@@ -410,10 +391,6 @@ test "fundamental operations" {
     // descend into subring r1
     try testing.expectEqual(&r1_data_nodes[0], r0_data_nodes[0].step());
 
-    // exit r1
-    try testing.expectEqual(&r0_data_nodes[1], r1_data_nodes[5].step());
-    try testing.expectEqual(&r0_data_nodes[1], g1.exit().?);
-
     // skip over an empty subring (r4)
     try testing.expectEqual(&r2_data_nodes[4], r2_data_nodes[3].step());
 
@@ -428,8 +405,6 @@ test "fundamental operations" {
 
     // find the last data node in the multiring
     try testing.expectEqual(&r0_data_nodes[3], multiring.findLast().?);
-    try testing.expectEqual(&r0_data_nodes[3], g0.findLast().?);
-    try testing.expectEqual(&r0_data_nodes[3], r2_data_nodes[0].findLast());
 
     // find the last data node in r1
     try testing.expectEqual(&r1_data_nodes[5], g1.findLastLocal().?);
@@ -491,15 +466,7 @@ test "fundamental operations" {
     );
 }
 
-test "try to exit an empty ring" {
-    const std = @import("std");
-    const testing = std.testing;
-    const M = MultiRing(u8);
-    var g0 = M.GateNode{};
-    try testing.expectEqual(@as(?*M.DataNode, null), g0.exit());
-}
-
-test "exit, skipping an intermediate ring" {
+test "ring skips" {
     const std = @import("std");
     const testing = std.testing;
 
@@ -521,5 +488,6 @@ test "exit, skipping an intermediate ring" {
     try multiring.attachSubring(&d0, &g1);
     try multiring.attachSubring(&d1, &g2);
 
-    try testing.expectEqual(&d0, g2.exit().?);
+    try testing.expectEqual(&d0, d2.step());
+    try testing.expectEqual(&d2, multiring.findLast().?);
 }
