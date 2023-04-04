@@ -72,7 +72,7 @@ const MultiRingError = multiring.MultiRingError;
 
 ## Using multiring.zig
 
-Please see the integration test in [*multiring.zig*][source].
+Please see the tests in [*multiring_test.zig*][multiring_test.zig].
 
 The `MultiRing` API is still unstable; [Ryoko] doesn’t recommend using this library in production.
 
@@ -121,11 +121,11 @@ The following resources have been instrumental in preparing this repository for 
 [issue tracker]: https://github.com/ok-ryoko/multiring.zig/issues
 [license]: ./LICENSE.txt
 [linked list]: https://en.wikipedia.org/wiki/Linked_list
+[multiring_test.zig]: ./src/multiring_test.zig
 [Open Source Guides]: https://opensource.guide/
 [right-hand rule]: https://en.wikipedia.org/wiki/Right-hand_rule
 [rsync]: https://rsync.samba.org/
 [Ryoko]: https://github.com/ok-ryoko
-[source]: ./src/multiring.zig
 [std.SinglyLinkedList]: https://github.com/ziglang/zig/blob/0.9.1/lib/std/linked_list.zig
 [submodules]: https://git-scm.com/book/en/v2/Git-Tools-Submodules
 [tokio contributing guidelines]: https://github.com/tokio-rs/tokio/blob/d7d5d05333f7970c2d75bfb20371450b5ad838d7/CONTRIBUTING.md
