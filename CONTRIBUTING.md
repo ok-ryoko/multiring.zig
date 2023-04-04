@@ -65,7 +65,7 @@ To work on multiring.zig, you’ll need some or all of following software:
 - [Git] 2.9 or newer
 - [Zig] 0.10.1, for work on the multiring data structure
 - [ShellCheck] 0.8, for [Git hook][githooks] development
-- [yamllint] 1.29, for [GitHub issue forms][syntax for issue forms] and [GitHub Actions workflows]
+- [yamllint] 1.30, for [GitHub issue forms][syntax for issue forms] and [GitHub Actions workflows]
 
 ### Claiming an issue
 
@@ -284,7 +284,18 @@ git config --local core.hooksPath .githooks
 
 #### pre-commit
 
-We use a [pre-commit hook] to validate our code at commit time.
+We use a [pre-commit hook] to validate our code at commit time. Here’s an example of the output:
+
+```console
+$ git commit -m 'inline switch cases on Node'
+pre-commit: info: checking Zig source code formatting...
+pre-commit: info: building...
+pre-commit: info: running tests...
+All 2 tests passed.
+pre-commit: info: OK!
+[main b644b00] inline switch cases on Node
+ 1 file changed, 5 insertions(+), 12 deletions(-)
+```
 
 When we commit a change to *build.zig* or any *.zig* file in *src/*, the pre-commit hook:
 

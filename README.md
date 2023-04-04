@@ -10,30 +10,40 @@
   <img
     src="./docs/img/multiring-github-light.png"
     title="multiring"
-    alt="A multiring comprising 18 data nodes arranged in 5 rings at 3 levels"
+    alt="Multiring comprising 18 data nodes arranged in 5 rings at 3 levels"
     align="left"
-    height="60"
+    height="61"
   >
 </picture>
-
 
 # multiring.zig
 
 The *multiring* is a singly [linked][linked list], cyclic and [hierarchical][tree] [abstract data type] that supports forward traversal. multiring.zig implements the mulitiring in the [Zig language][Zig].
 
-The following animation shows how a multiring is traversed. The yellow spheres represent gate (sentinel) nodes that control the traversal of the data nodes (represented by the blue spheres).
+> ⚠ The multiring, as implemented in this repository, hasn’t been specified and verified formally.
 
-<p align ="center">
-  <img
-    src="./docs/img/multiring-traversal.gif"
-    title="multiring traversal loop"
-    alt="A loop of the counter-clockwise traversal of a multiring comprising 18 data nodes arranged in 5 rings at 3 levels"
-  >
+The following animation shows how a multiring is traversed. The colored spheres represent gate (sentinel) nodes that control the traversal of the data nodes.
+
+<p align="center">
+  <picture>
+    <source
+      media="(prefers-color-scheme: dark)"
+      srcset="./docs/img/multiring-traversal-github-dark.gif"
+    >
+    <source
+      media="(prefers-color-scheme: light)"
+      srcset="./docs/img/multiring-traversal-github-light.gif"
+    >
+    <img
+      src="./docs/img/multiring-traversal-github-light.gif"
+      title="multiring traversal loop"
+      alt="Loop of the counter-clockwise traversal of a multiring comprising 18 data nodes arranged in 5 rings at 3 levels"
+      height="320"
+    >
+  </picture>
 </p>
 
 The counter-clockwise orientation of traversal is arbitrary—we obtain it by having the normal to the plane of each ring point up and applying the [right-hand rule]. We chose a 3D representation to better visualize the depth of the traversal.
-
-The multiring, as implemented in this repository, hasn’t been specified and verified formally.
 
 ## Importing multiring.zig
 
@@ -82,7 +92,7 @@ If you’re encountering unexpected or undesirable program behavior, check the [
 
 If you have questions about using the program or participating in the community around the program, consider [starting a discussion][discussions].
 
-Please allow up to 1 week for a maintainer to reply to an issue or discussion.
+Please allow up to 1 week for a maintainer to reply to an issue or a discussion.
 
 ### Contributing to multiring.zig
 
