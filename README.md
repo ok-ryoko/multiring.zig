@@ -18,7 +18,7 @@
 
 # multiring.zig
 
-The *multiring* is a singly [linked][linked list], cyclic and [hierarchical][tree] [abstract data type] that supports forward traversal. multiring.zig implements the mulitiring in the [Zig language][Zig].
+The *multiring* is a singly [linked][linked list], cyclic and [hierarchical][tree] [abstract data type] that supports forward traversal. multiring.zig implements the multiring in the [Zig language][Zig].
 
 > ⚠ The multiring, as implemented in this repository, hasn’t been specified and verified formally.
 
