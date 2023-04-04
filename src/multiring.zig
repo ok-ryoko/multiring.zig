@@ -118,11 +118,7 @@ pub fn MultiRing(comptime T: type) type {
             }
 
             pub fn findLastLocal(node: *GateNode) ?*DataNode {
-                if (node.next) |next_node| {
-                    return next_node.findLastLocal();
-                } else {
-                    return null;
-                }
+                return if (node.next) |next_node| next_node.findLastLocal() else null;
             }
         };
 
