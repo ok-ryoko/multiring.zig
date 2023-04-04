@@ -5,18 +5,25 @@ const multiring = @import("multiring.zig");
 const MultiRing = multiring.MultiRing;
 const MultiRingError = multiring.MultiRingError;
 
+fn expectNull(actual: anytype) !void {
+    switch (@typeInfo(@TypeOf(actual))) {
+        .Optional => try testing.expectEqual(@as(@TypeOf(actual), null), actual),
+        else => @compileError("expected optional type, found " ++ @typeName(@TypeOf(actual))),
+    }
+}
+
 test "empty multirings" {
     const M = MultiRing(u8);
 
     var m0 = M{ .root = null };
-    try testing.expectEqual(@as(?*M.DataNode, null), m0.findLast());
+    try expectNull(m0.findLast());
 
     var g0 = M.GateNode{};
     var m1 = M{ .root = &g0 };
-    try testing.expectEqual(@as(?*M.DataNode, null), m1.findLast());
-    try testing.expectEqual(@as(?*M.DataNode, null), m1.root.?.step());
-    try testing.expectEqual(@as(?*M.DataNode, null), m1.root.?.stepLocal());
-    try testing.expectEqual(@as(?*M.DataNode, null), m1.root.?.popNext());
+    try expectNull(m1.findLast());
+    try expectNull(m1.root.?.step());
+    try expectNull(m1.root.?.stepLocal());
+    try expectNull(m1.root.?.popNext());
 }
 
 test "fundamental operations" {
@@ -120,17 +127,17 @@ test "fundamental operations" {
     try testing.expectEqual(&r1_data_nodes[5], r1_data_nodes[0].findLastLocal());
 
     // find the last data node in r4 (there isn't one)
-    try testing.expectEqual(@as(?*M.DataNode, null), g4.findLastLocal());
+    try expectNull(g4.findLastLocal());
 
     // remove a data node in the m0 (in r3)
     try testing.expect(m0.remove(&r3_data_nodes[2]));
     try testing.expectEqual(M.Node{ .gate = &g3 }, r3_data_nodes[1].next.?);
-    try testing.expectEqual(@as(?M.Node, null), r3_data_nodes[2].next);
+    try expectNull(r3_data_nodes[2].next);
 
     // try to remove a data node that isn't in the m0
     var d = M.DataNode{ .data = 0 };
     try testing.expect(!m0.remove(&d));
-    try testing.expectEqual(@as(?M.Node, null), d.next);
+    try expectNull(d.next);
 
     // pop a data node from a data node in r3
     try testing.expectEqual(&r3_data_nodes[1], r3_data_nodes[0].popNext().?);
@@ -138,16 +145,16 @@ test "fundamental operations" {
 
     // pop a data node from the r3 gate node
     try testing.expectEqual(&r3_data_nodes[0], g3.popNext().?);
-    try testing.expectEqual(@as(?*M.DataNode, null), g3.next);
+    try expectNull(g3.next);
 
     // try to pop the next data node from g3 (there isn't one)
-    try testing.expectEqual(@as(?*M.DataNode, null), g3.popNext());
-    try testing.expectEqual(@as(?*M.DataNode, null), g3.next);
+    try expectNull(g3.popNext());
+    try expectNull(g3.next);
 
     // pop r3 (now empty) from r2
     try testing.expectEqual(&g3, r2_data_nodes[1].popSubring().?);
-    try testing.expectEqual(@as(?*M.GateNode, null), r2_data_nodes[1].child);
-    try testing.expectEqual(@as(?*M.DataNode, null), g3.parent);
+    try expectNull(r2_data_nodes[1].child);
+    try expectNull(g3.parent);
     try testing.expectEqual(&r2_data_nodes[2], r2_data_nodes[1].step());
 
     // append a new node to the end of the m0
