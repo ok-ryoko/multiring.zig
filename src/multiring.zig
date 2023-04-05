@@ -1,313 +1,803 @@
-pub const MultiRingError = error{
-    DataNodeAlreadyHasChild,
-    GateNodeAlreadyHasParent,
-    UnsafeLoopCreationAttempt,
-};
-
-/// Singly linked, cyclic and hierarchical abstract data type
+/// Hierarchical, forwardly linked and circularly linked abstract data type
+///
+/// At all times, assume that:
+///
+///   - no node in a multiring points to itself
+///   - every node in a multiring represents a unique location in memory
+///   - there are no more than two nodes in a multiring pointing to any node in the multiring
+///
 pub fn MultiRing(comptime T: type) type {
     return struct {
         const Self = @This();
 
+        /// A node is either a head node or data node
+        ///
         pub const Node = union(enum) {
-            gate: *GateNode,
+            head: *HeadNode,
             data: *DataNode,
 
-            /// Insert a new data node after the current node
-            pub fn insertAfter(self: Node, new_node: *DataNode) void {
-                switch (self) {
-                    inline else => |s| s.insertAfter(new_node),
-                }
+            /// Determine whether this node is a head node
+            ///
+            pub fn isHead(self: Node) bool {
+                return self == .head;
             }
 
-            /// Remove and return the next data node from the current ring;
-            /// return null when the next node is a gate node, i.e., the ring
-            /// is empty
-            pub fn popNext(self: Node) ?*DataNode {
+            /// Determine whether this node is a data node
+            ///
+            pub fn isData(self: Node) bool {
+                return self == .data;
+            }
+
+            /// Return the last data node in this ring
+            ///
+            pub fn findLast(self: Node) ?*DataNode {
                 return switch (self) {
-                    inline else => |s| s.popNext(),
+                    inline else => |s| s.findLast(),
                 };
             }
 
-            /// Step forward by one node, traversing only the data nodes of
-            /// the multiring as if it were a cyclic linked list
+            /// Return the next head node in this multiring after this node
+            ///
+            pub fn findHeadZ(self: Node) ?*HeadNode {
+                return switch (self) {
+                    inline else => |s| s.findHeadZ(),
+                };
+            }
+
+            /// Return the root of this multiring
+            ///
+            pub fn findRoot(self: Node) ?*HeadNode {
+                return switch (self) {
+                    inline else => |s| s.findRoot(),
+                };
+            }
+
+            /// Return the next data node in this ring
+            ///
             pub fn step(self: Node) ?*DataNode {
                 return switch (self) {
                     inline else => |s| s.step(),
                 };
             }
 
-            /// Same as Node.step() but never leaves the current ring
-            pub fn stepLocal(self: Node) ?*DataNode {
+            /// Return the next data node in this multiring
+            ///
+            pub fn stepZ(self: Node) ?*DataNode {
                 return switch (self) {
-                    inline else => |s| s.stepLocal(),
+                    inline else => |s| s.stepZ(),
                 };
             }
 
-            /// Find the last data node in the current ring; return null if the
-            /// ring is empty
-            pub fn findLastLocal(self: Node) ?*DataNode {
+            /// Insert a data node immediately after this node
+            ///
+            pub fn insertAfter(self: Node, node: *DataNode) void {
+                switch (self) {
+                    inline else => |s| s.insertAfter(node),
+                }
+            }
+
+            /// Insert many data nodes immediately after this node
+            ///
+            pub fn insertManyAfter(self: Node, nodes: []DataNode) void {
+                switch (self) {
+                    inline else => |s| s.insertManyAfter(nodes),
+                }
+            }
+
+            /// Remove and return the next data node in this ring
+            ///
+            pub fn popNext(self: Node) ?*DataNode {
                 return switch (self) {
-                    inline else => |s| s.findLastLocal(),
+                    inline else => |s| s.popNext(),
                 };
             }
         };
 
-        /// Sentinel node that acts as a waypoint into and out of a possibly
-        /// empty ring
-        pub const GateNode = struct {
+        /// A head node is the first node of a ring and contains:
+        ///
+        ///   - an optional link to the first data node in the ring (`next`)
+        ///   - an optional link to the next node in this ring's superring (`next_above`)
+        ///
+        /// Given a head node `h`, we say that:
+        ///
+        ///   - the ring defined by h is empty when `h.next` is null
+        ///   - h is the root of a multiring when `h.next_above` is null
+        ///
+        pub const HeadNode = struct {
             next: ?*DataNode = null,
-            parent: ?*DataNode = null,
+            next_above: ?Node = null,
 
-            pub fn insertAfter(node: *GateNode, new_node: *DataNode) void {
-                if (node.next) |next_node| {
-                    new_node.next = .{ .data = next_node };
-                } else {
-                    // The gate is the only node in the ring, so connect the
-                    // new node back to the gate
-                    //
-                    new_node.next = .{ .gate = node };
-                }
-                node.next = new_node;
+            /// Determine whether this head node is the root of a multiring
+            ///
+            pub fn isRoot(this: *HeadNode) bool {
+                return this.next_above == null;
             }
 
-            /// Insert a data node after the last data node in the current ring
-            pub fn append(node: *GateNode, new_node: *DataNode) void {
-                if (node.next) |next_node| {
-                    const last = next_node.findLastLocal();
-                    last.insertAfter(new_node);
-                } else {
-                    node.insertAfter(new_node);
-                }
+            /// Determine whether this ring is empty
+            ///
+            pub fn isEmpty(this: *HeadNode) bool {
+                return this.next == null;
             }
 
-            pub fn popNext(node: *GateNode) ?*DataNode {
-                return if (node.next) |next_node| blk: {
-                    node.next = switch (next_node.next.?) {
-                        .gate => null,
-                        .data => |next_next_node| next_next_node,
-                    };
-                    break :blk next_node;
-                } else null;
+            /// If this ring is empty, then return null; otherwise determine whether this ring
+            /// comprises a null-terminated sequence of data nodes
+            ///
+            pub fn isOpen(this: *HeadNode) ?bool {
+                return if (this.next) |first| first.findHead() == null else null;
             }
 
-            pub fn step(node: *GateNode) ?*DataNode {
-                var result: ?*DataNode = null;
-                if (node.next) |next_node| {
-                    result = next_node;
-                } else if (node.parent != null) {
-                    var gate_it = node;
-                    while (true) {
-                        if (gate_it.parent) |gate_parent| {
-                            switch (gate_parent.next.?) {
-                                .gate => |g| gate_it = g,
-                                .data => |d| {
-                                    result = d;
-                                    break;
-                                },
-                            }
-                        } else {
-                            // We've reached the root node, so return the
-                            // first data node
-                            //
-                            result = gate_it.next.?;
+            /// Return the number of data nodes in this ring
+            ///
+            pub fn count(this: *HeadNode) usize {
+                return if (this.next) |first| first.countAfter() + 1 else 0;
+            }
+
+            /// Return the number of data nodes after this ring in this multiring
+            ///
+            pub fn countAbove(this: *HeadNode) usize {
+                var result: usize = 0;
+                var it = this;
+                while (it.next_above) |n| {
+                    switch (n) {
+                        .head => |h| it = h,
+                        .data => |d| {
+                            result += d.countAfterZ() + 1;
                             break;
+                        },
+                    }
+                }
+                return result;
+            }
+
+            /// Return the number of data nodes in the multiring rooted at this head node
+            ///
+            pub fn countBelow(this: *HeadNode) usize {
+                var result: usize = 0;
+                if (this.next) |first| {
+                    result += 1;
+                    if (first.next_below) |h| {
+                        result += h.countBelow();
+                    }
+                    var it = first.next;
+                    while (it) |n| {
+                        switch (n) {
+                            .head => break,
+                            .data => |d| {
+                                result += 1;
+                                if (d.next_below) |h| {
+                                    result += h.countBelow();
+                                }
+                                it = d.next;
+                            },
                         }
                     }
                 }
                 return result;
             }
 
-            pub fn stepLocal(node: *GateNode) ?*DataNode {
-                return if (node.next) |next_node| next_node else null;
+            /// If this ring is empty, then return null; otherwise return the last data node in
+            /// this ring
+            ///
+            pub fn findLast(this: *HeadNode) ?*DataNode {
+                return if (this.next) |first| first.findLast() else null;
             }
 
-            pub fn findLastLocal(node: *GateNode) ?*DataNode {
-                return if (node.next) |next_node| next_node.findLastLocal() else null;
+            /// Return the last data node in this multiring after this ring if there is one and
+            /// otherwise null
+            ///
+            pub fn findLastAbove(this: *HeadNode) ?*DataNode {
+                var result: ?*DataNode = null;
+                var it = this;
+                while (it.next_above) |n| {
+                    switch (n) {
+                        .head => |h| it = h,
+                        .data => |d| {
+                            result = d.findLastZ();
+                            break;
+                        },
+                    }
+                }
+                return result;
+            }
+
+            /// If this ring is empty, then return null; otherwise return the last data node in the
+            /// multiring rooted at this head node
+            ///
+            pub fn findLastBelow(this: *HeadNode) ?*DataNode {
+                var result: ?*DataNode = null;
+                var it = this.findLast();
+                while (it) |d| {
+                    result = d;
+                    const h = d.next_below orelse break;
+                    it = h.findLast();
+                }
+                return result;
+            }
+
+            /// If this head node is the root of a multiring, then return null; otherwise return
+            /// the first head node above this head node
+            ///
+            pub fn findHeadAbove(this: *HeadNode) ?*HeadNode {
+                return if (this.next_above) |n| switch (n) {
+                    .head => |h| h,
+                    .data => |d| d.findHead(),
+                } else null;
+            }
+
+            /// Return the first head node in this multiring after this head node if it can be
+            /// found and null otherwise
+            ///
+            pub fn findHeadZ(this: *HeadNode) ?*HeadNode {
+                return if (this.next) |first| blk: {
+                    break :blk first.findHeadZ();
+                } else if (this.findHeadAbove()) |h| blk: {
+                    break :blk h;
+                } else this;
+            }
+
+            /// Return the root of this multiring if it can be found and null otherwise
+            ///
+            pub fn findRoot(this: *HeadNode) ?*HeadNode {
+                var it = this;
+                while (it.next_above) |n| {
+                    switch (n) {
+                        .head => |h| it = h,
+                        .data => |d| {
+                            if (d.findHead()) |h| {
+                                it = h;
+                            } else {
+                                return null;
+                            }
+                        },
+                    }
+                }
+                return it;
+            }
+
+            /// If this ring is empty, then return null; otherwise return the first data node in
+            /// this ring
+            ///
+            pub fn step(this: *HeadNode) ?*DataNode {
+                return if (this.next) |first| first else null;
+            }
+
+            /// If this ring is empty or this head node is the root of a multiring, then return
+            /// null; otherwise return either the first next data node in a superring of this ring
+            /// if it exists or null
+            ///
+            pub fn stepAbove(this: *HeadNode) ?*DataNode {
+                var it = this;
+                while (it.next_above) |n| {
+                    switch (n) {
+                        .head => |h| it = h,
+                        .data => |d| return d,
+                    }
+                }
+                return null;
+            }
+
+            /// If this head node is the root of an empty multiring, then return null; otherwise
+            /// return either the first data node in this ring if this ring is non-empty, or the
+            /// next data node in a superring of this ring if there are data nodes still left in
+            /// the sequence, or null
+            ///
+            pub fn stepZ(this: *HeadNode) ?*DataNode {
+                return if (this.next) |first| first else this.stepAbove();
+            }
+
+            /// Unlink the last data node in this ring from this head node
+            ///
+            pub fn open(this: *HeadNode) void {
+                if (this.next) |first| {
+                    const last = first.findLast();
+                    last.next = null;
+                    if (last.next_below) |h| {
+                        h.next_above = null;
+                    }
+                }
+            }
+
+            /// Link the last data node in this ring to this head node
+            ///
+            pub fn close(this: *HeadNode) void {
+                if (this.next) |first| {
+                    const last = first.findLast();
+                    last.next = .{ .head = this };
+                    if (last.next_below) |h| {
+                        h.next_above = .{ .head = this };
+                    }
+                }
+            }
+
+            /// Rotate the data nodes in this ring by one position such that the first data node
+            /// before the operation is the last data node after the operation
+            ///
+            pub fn rotate(this: *HeadNode) void {
+                if (this.next) |first| {
+                    var last = first.findLast();
+                    if (first.next) |n| {
+                        switch (n) {
+                            .head => {},
+                            .data => |d| {
+                                this.next = d;
+                                first.next = last.next;
+                                if (first.next_below) |h| {
+                                    h.next_above = .{ .head = this };
+                                }
+                                last.next = .{ .data = first };
+                                if (last.next_below) |h| {
+                                    h.next_above = .{ .data = first };
+                                }
+                            },
+                        }
+                    }
+                }
+            }
+
+            /// Insert a data node immediately after this head node, closing this ring if it is
+            /// empty; assume that `node` is not already in this multiring
+            ///
+            pub fn insertAfter(this: *HeadNode, node: *DataNode) void {
+                node.next = if (this.next) |first| .{ .data = first } else .{ .head = this };
+                this.next = node;
+            }
+
+            /// Insert many data nodes immediately after this head node, closing this ring if it is
+            /// empty; assume that none of `nodes` is already in this multiring
+            ///
+            pub fn insertManyAfter(this: *HeadNode, nodes: []DataNode) void {
+                if (nodes.len > 0) {
+                    this.insertAfter(&nodes[0]);
+                    var it = &nodes[0];
+                    for (nodes[1..]) |*n| {
+                        it.insertAfter(n);
+                        it = n;
+                    }
+                }
+            }
+
+            /// If this ring is empty, then append a data node to this head node and close this
+            /// ring; otherwise insert a data node immediately after this ring's last data node;
+            /// assume that `node` is not already in this multiring
+            ///
+            pub fn append(this: *HeadNode, node: *DataNode) void {
+                if (this.next) |first| {
+                    const last = first.findLast();
+                    last.insertAfter(node);
+                } else {
+                    this.insertAfter(node);
+                }
+            }
+
+            /// If this ring is empty, then append many data nodes to this head node and close this
+            /// ring; otherwise insert many data nodes immediately after this ring's last data node;
+            /// assume that none of `nodes` is already in this multiring
+            ///
+            pub fn extend(this: *HeadNode, nodes: []DataNode) void {
+                if (this.next) |first| {
+                    const last = first.findLast();
+                    last.insertManyAfter(nodes);
+                } else {
+                    this.insertManyAfter(nodes);
+                }
+            }
+
+            /// Remove and return the first data node in this ring or null if this ring is empty
+            ///
+            pub fn popNext(this: *HeadNode) ?*DataNode {
+                if (this.next) |first| {
+                    this.next = if (first.next) |n| switch (n) {
+                        .head => null,
+                        .data => |d| d,
+                    } else null;
+                    first.next = null;
+                    if (first.next_below) |h| {
+                        h.next_above = null;
+                    }
+                    return first;
+                }
+                return null;
+            }
+
+            /// Remove a data node from this ring, returning true if the node was found and
+            /// removed and false otherwise
+            ///
+            pub fn remove(this: *HeadNode, node: *DataNode) bool {
+                if (this.next) |first| {
+                    if (first == node) {
+                        _ = this.popNext().?;
+                        return true;
+                    }
+                    return first.removeAfter(node);
+                }
+                return false;
+            }
+
+            /// Remove a data node from this multiring after this ring, returning true if the node
+            /// was found and removed and false otherwise
+            ///
+            pub fn removeAbove(this: *HeadNode, node: *DataNode) bool {
+                var it = this;
+                while (it.next_above) |n| {
+                    switch (n) {
+                        .head => |h| it = h,
+                        .data => |d| {
+                            if (d == node) {
+                                if (d.findHead()) |h| {
+                                    return h.remove(node);
+                                }
+                                return false;
+                            }
+                            return d.removeAfterZ(node);
+                        },
+                    }
+                }
+                return false;
+            }
+
+            /// Remove a data node from the multiring rooted at this head node, returning true if
+            /// the node was found and removed and false otherwise
+            ///
+            pub fn removeBelow(this: *HeadNode, node: *DataNode) bool {
+                if (this.next) |first| {
+                    if (first == node) {
+                        _ = this.popNext().?;
+                        return true;
+                    }
+
+                    if (first.next_below) |h| {
+                        if (h.removeBelow(node)) {
+                            return true;
+                        }
+                    }
+
+                    var it = first;
+                    while (it.next) |n| {
+                        switch (n) {
+                            .head => break,
+                            .data => |d| {
+                                if (d == node) {
+                                    _ = it.popNext().?;
+                                    return true;
+                                }
+                                if (d.next_below) |h| {
+                                    if (h.removeBelow(node)) {
+                                        return true;
+                                    }
+                                }
+                                it = d;
+                            },
+                        }
+                    }
+                }
+                return false;
             }
         };
 
-        /// Node that holds data and can be an attachment point for a subring
+        /// A data node is an element of a ring and contains:
+        ///
+        ///   - an optional link to the next node in the ring (`next`)
+        ///   - an optional link to the head node of another ring (a subring) (`next_below`)
+        ///   - data of a compile time-known type (`data`)
+        ///
+        /// At all times, assume that:
+        ///
+        ///   - if the next node in this ring is a head node, then that head
+        ///     node is equal to the head node immediately upstream of this data node
+        ///
         pub const DataNode = struct {
             next: ?Node = null,
-            child: ?*GateNode = null,
+            next_below: ?*HeadNode = null,
             data: T,
 
             pub const Data = T;
 
-            pub fn insertAfter(node: *DataNode, new_node: *DataNode) void {
-                new_node.next = node.next;
-                node.next = .{ .data = new_node };
+            /// Return the number of data nodes after this data node in this ring
+            ///
+            pub fn countAfter(this: *DataNode) usize {
+                var result: usize = 0;
+                var it = this;
+                while (it.next) |n| {
+                    switch (n) {
+                        .head => break,
+                        .data => |d| {
+                            result += 1;
+                            it = d;
+                        },
+                    }
+                }
+                return result;
             }
 
-            pub fn popNext(node: *DataNode) ?*DataNode {
-                return switch (node.next.?) {
-                    .gate => null,
-                    .data => |next_node| blk: {
-                        node.next = next_node.next;
-                        break :blk next_node;
-                    },
-                };
+            /// Return the number of data nodes after this data node in this multiring
+            ///
+            pub fn countAfterZ(this: *DataNode) usize {
+                var result: usize = 0;
+                var it = this;
+                while (it.stepZ()) |d| : (it = d) {
+                    result += 1;
+                }
+                return result;
             }
 
-            pub fn step(node: *DataNode) *DataNode {
-                // If this node has a child gate node of a ring containing at
-                // least one data node, then go to the first data node in the
-                // subring; otherwise, go to the next data node
-                //
-                var result: ?*DataNode = null;
-                const child = node.child;
-                if (child != null and child.?.next != null) {
-                    result = child.?.next.?;
-                } else {
-                    switch (node.next.?) {
-                        .gate => |*gate_it| {
-                            while (true) {
-                                if (gate_it.*.parent) |parent| {
-                                    switch (parent.next.?) {
-                                        .gate => |g| gate_it.* = g,
-                                        .data => |d| {
-                                            result = d;
-                                            break;
-                                        },
-                                    }
-                                } else {
-                                    result = gate_it.*.next.?;
-                                    break;
-                                }
+            /// Return the last data node in this ring
+            ///
+            pub fn findLast(this: *DataNode) *DataNode {
+                var it = this;
+                while (it.next) |n| {
+                    switch (n) {
+                        .head => break,
+                        .data => |d| it = d,
+                    }
+                }
+                return it;
+            }
+
+            /// Return the last data node in this multiring
+            ///
+            pub fn findLastZ(this: *DataNode) *DataNode {
+                var it = this;
+                while (it.stepZ()) |d| : (it = d) {}
+                return it;
+            }
+
+            /// If this ring is open, then return null; otherwise return the head node of this
+            /// ring
+            ///
+            pub fn findHead(this: *DataNode) ?*HeadNode {
+                var it = this;
+                while (it.next) |n| {
+                    switch (n) {
+                        .head => |h| return h,
+                        .data => |d| it = d,
+                    }
+                }
+                return null;
+            }
+
+            /// Return the next head node in this multiring after this data node if it can be found
+            /// and null otherwise
+            ///
+            pub fn findHeadZ(this: *DataNode) ?*HeadNode {
+                if (this.next_below) |h| {
+                    return h;
+                }
+                var it = this;
+                while (it.next) |n| {
+                    switch (n) {
+                        .head => |h| return h,
+                        .data => |d| {
+                            if (d.next_below) |h| {
+                                return h;
                             }
+                            it = d;
                         },
-                        .data => |next_node| result = next_node,
                     }
                 }
-                return result.?;
+                return null;
             }
 
-            pub fn stepLocal(node: *DataNode) *DataNode {
-                return switch (node.next.?) {
-                    .gate => |next_node| next_node.next.?,
-                    .data => |next_node| next_node,
-                };
+            /// Return the root of this multiring if it can be found and null otherwise
+            ///
+            pub fn findRoot(this: *DataNode) ?*HeadNode {
+                return if (this.findHead()) |h| h.findRoot() else null;
             }
 
-            pub fn findLastLocal(node: *DataNode) *DataNode {
-                var result: ?*DataNode = null;
-                var it = node;
+            /// If this is the last data node in this ring, then return null; otherwise return the
+            /// next data node in this ring
+            ///
+            pub fn step(this: *DataNode) ?*DataNode {
+                return if (this.next) |n| switch (n) {
+                    .head => null,
+                    .data => |d| d,
+                } else null;
+            }
+
+            /// If there is no non-empty subring at this data node, then return null; otherwise
+            /// return the first data node in the subring
+            ///
+            pub fn stepBelow(this: *DataNode) ?*DataNode {
+                if (this.next_below) |h| {
+                    if (h.next) |n| {
+                        return n;
+                    }
+                }
+                return null;
+            }
+
+            /// If this is the last data node in an open ring or the last data node in this
+            /// multiring, then return null; otherwise return the next data node in this multiring
+            ///
+            pub fn stepZ(this: *DataNode) ?*DataNode {
+                if (this.stepBelow()) |d| {
+                    return d;
+                }
+                return if (this.next) |n| switch (n) {
+                    .head => |h| h.stepAbove(),
+                    .data => |d| d,
+                } else null;
+            }
+
+            /// Insert a data node immediately after this data node; assume that `node` is not
+            /// already in this multiring
+            ///
+            pub fn insertAfter(this: *DataNode, node: *DataNode) void {
+                node.next = this.next;
+                this.next = .{ .data = node };
+                if (this.next_below) |h| {
+                    h.next_above = .{ .data = node };
+                }
+            }
+
+            /// Insert many data nodes imediately after this data node; assume that none of `nodes`
+            /// is already in this multiring
+            ///
+            pub fn insertManyAfter(this: *DataNode, nodes: []DataNode) void {
+                if (nodes.len > 0) {
+                    var it = this;
+                    for (nodes) |*n| {
+                        it.insertAfter(n);
+                        it = n;
+                    }
+                }
+            }
+
+            /// If this is the last data node in this ring, then return null; otherwise remove and
+            /// return the next data node in this ring
+            ///
+            pub fn popNext(this: *DataNode) ?*DataNode {
+                if (this.next) |n| {
+                    switch (n) {
+                        .head => {},
+                        .data => |d| {
+                            this.next = d.next;
+                            if (this.next_below) |h| {
+                                h.next_above = d.next;
+                            }
+                            d.next = null;
+                            if (d.next_below) |h| {
+                                h.next_above = null;
+                            }
+                            return d;
+                        },
+                    }
+                }
+                return null;
+            }
+
+            /// Remove a data node from this ring after this data node, returning true if the node
+            /// was found and removed and false otherwise
+            ///
+            pub fn removeAfter(this: *DataNode, node: *DataNode) bool {
+                var it = this;
+                while (it.next) |n| {
+                    switch (n) {
+                        .head => break,
+                        .data => |d| {
+                            if (d == node) {
+                                _ = it.popNext().?;
+                                return true;
+                            }
+                            it = d;
+                        },
+                    }
+                }
+                return false;
+            }
+
+            /// Remove a data node from this multiring after this data node, returning true if the
+            /// node was found and removed and false otherwise
+            ///
+            pub fn removeAfterZ(this: *DataNode, node: *DataNode) bool {
+                var it = this;
                 while (true) {
-                    switch (it.next.?) {
-                        .gate => {
-                            result = it;
-                            break;
-                        },
-                        .data => it = it.stepLocal(),
+                    if (it.next_below) |h| {
+                        if (h.removeBelow(node)) {
+                            return true;
+                        }
                     }
+                    if (it.next) |n| {
+                        switch (n) {
+                            .head => |h| return h.removeAbove(node),
+                            .data => |d| {
+                                if (d == node) {
+                                    _ = it.popNext().?;
+                                    return true;
+                                }
+                                it = d;
+                                continue;
+                            },
+                        }
+                    }
+                    break;
                 }
-                return result.?;
+                return false;
             }
 
-            /// Remove and return the subring attached to this data node;
-            /// return null when there's no subring
-            pub fn popSubring(node: *DataNode) ?*GateNode {
-                return if (node.child) |gate_node| blk: {
-                    node.child = null;
-                    gate_node.parent = null;
-                    break :blk gate_node;
+            /// Link a multiring to this data node; assume that:
+            ///
+            ///   - there is not already a multiring attached to `this`, and
+            ///   - `head` is not already in this multiring
+            ///
+            pub fn attachMultiRing(this: *DataNode, head: *HeadNode) void {
+                this.next_below = head;
+                head.next_above = this.next;
+            }
+
+            /// Remove and return the multiring linked to this data node or null if there is no
+            /// such multiring
+            ///
+            pub fn detachMultiRing(node: *DataNode) ?*HeadNode {
+                return if (node.next_below) |h| blk: {
+                    node.next_below = null;
+                    h.next_above = null;
+                    break :blk h;
                 } else null;
             }
         };
 
-        root: ?*GateNode = null,
+        /// At all times, assume that `root` is the unique head node in this multiring with
+        /// `root.next_above` equal to null
+        ///
+        root: ?*HeadNode = null,
 
-        /// Append a data node to the end of the multiring
-        pub fn append(ring: *Self, node: *DataNode) void {
-            const last = ring.findLast();
-            if (last != null) {
-                last.?.insertAfter(node);
-            } else {
-                ring.root.?.insertAfter(node);
-            }
+        /// Determine whether this multiring is empty
+        ///
+        pub fn isEmpty(self: *Self) bool {
+            return if (self.root) |r| r.isEmpty() else true;
         }
 
-        /// Remove a data node from the ring; return true if the node was
-        /// found and removed and otherwise false
-        pub fn remove(ring: *Self, node: *DataNode) bool {
-            var result = false;
-            if ((ring.root != null) and (ring.root.?.next != null)) {
-                const root = ring.root.?;
-                const root_next = root.next.?;
-                if (root_next == node) {
-                    root.next = switch (node.next.?) {
-                        .gate => null,
-                        .data => |next_node| next_node,
-                    };
-                } else {
-                    var it = root_next;
-                    while ((it.step() != node)) {
-                        if (it.step() == root_next) {
-                            // We have traversed the structure without
-                            // finding the given node
-                            //
-                            return false;
-                        }
-                        it = it.step();
-                    }
-
-                    if (it.child) |child| {
-                        if (child.next == it.step()) {
-                            child.next = switch (node.next.?) {
-                                .gate => null,
-                                .data => |next_node_| next_node_,
-                            };
-                        }
-                    } else {
-                        switch (it.next.?) {
-                            .gate => |*gate_it| {
-                                while (true) {
-                                    switch (gate_it.*.parent.?.next.?) {
-                                        .gate => |g| gate_it.* = g,
-                                        .data => {
-                                            gate_it.*.parent.?.next = node.next;
-                                            break;
-                                        },
-                                    }
-                                }
-                            },
-                            .data => it.next = node.next,
-                        }
-                    }
+        /// Return the number of data nodes in this multiring
+        ///
+        pub fn len(self: *Self) usize {
+            var result: usize = 0;
+            if (self.root) |r| {
+                if (r.next) |first| {
+                    result += first.countAfterZ() + 1;
                 }
-                node.next = null;
-                result = true;
             }
             return result;
         }
 
-        /// Find the last data node in the multiring; return null if the
-        /// multiring is empty
-        pub fn findLast(ring: *Self) ?*DataNode {
-            var it: ?*DataNode = null;
-            if (ring.root) |root| {
-                it = root.findLastLocal();
-                while ((it != null) and (it.?.child != null)) {
-                    it = it.?.child.?.findLastLocal();
-                }
-            }
-            return it;
+        /// If this multiring is empty or rootless, then return null; otherwise return the last
+        /// data node in this multiring
+        ///
+        pub fn findLast(self: *Self) ?*DataNode {
+            return if (self.root) |r| r.findLastBelow() else null;
         }
 
-        /// Link a gate node with no parent to a data node with no child;
-        /// the gate node must not be the root node
-        pub fn attachSubring(ring: *Self, node: *DataNode, gate: *GateNode) !void {
-            if (node.child != null) {
-                return MultiRingError.DataNodeAlreadyHasChild;
-            } else if (gate.parent != null) {
-                return MultiRingError.GateNodeAlreadyHasParent;
-            } else if (gate == ring.root) {
-                return MultiRingError.UnsafeLoopCreationAttempt;
+        /// If this multiring is rootless, then do nothing; otherwise insert a data node
+        /// immediately after either the root node, if this multiring is empty, or the last data
+        /// node in this multiring; assume that `node` is not already in this multiring
+        ///
+        pub fn append(self: *Self, node: *DataNode) void {
+            if (self.findLast()) |l| {
+                l.insertAfter(node);
+            } else if (self.root) |r| {
+                r.insertAfter(node);
             }
+        }
 
-            node.child = gate;
-            gate.parent = node;
+        /// If no data nodes are passed or this multiring is rootless, then do nothing; otherwise
+        /// insert many data nodes immediately after either the root node, if this multiring is
+        /// empty, or the last data node in this multiring; assume that none of `nodes` is already
+        /// in this multiring
+        ///
+        pub fn extend(self: *Self, nodes: []DataNode) void {
+            if (self.root) |r| {
+                if (r.findLastBelow()) |l| {
+                    l.insertManyAfter(nodes);
+                } else {
+                    r.insertManyAfter(nodes);
+                }
+            }
+        }
+
+        /// Remove a data node from this multiring, returning true if the node was found and
+        /// removed and false otherwise
+        ///
+        pub fn remove(self: *Self, node: *DataNode) bool {
+            return if (self.root) |r| r.removeBelow(node) else false;
         }
     };
 }

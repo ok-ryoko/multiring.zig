@@ -1,211 +1,391 @@
 const std = @import("std");
 const testing = std.testing;
+const expect = testing.expect;
+const expectEqual = testing.expectEqual;
 
 const multiring = @import("multiring.zig");
 const MultiRing = multiring.MultiRing;
-const MultiRingError = multiring.MultiRingError;
 
 fn expectNull(actual: anytype) !void {
     switch (@typeInfo(@TypeOf(actual))) {
-        .Optional => try testing.expectEqual(@as(@TypeOf(actual), null), actual),
+        .Optional => try expectEqual(@as(@TypeOf(actual), null), actual),
         else => @compileError("expected optional type, found " ++ @typeName(@TypeOf(actual))),
     }
 }
 
-test "empty multirings" {
+test "node" {
     const M = MultiRing(u8);
 
-    var m0 = M{ .root = null };
-    try expectNull(m0.findLast());
+    var h = M.HeadNode{};
+    var hn = M.Node{ .head = &h };
+    try expect(hn.isHead());
+    try expect(!hn.isData());
 
-    var d0 = M.DataNode{ .data = 0 };
-    try testing.expect(!m0.remove(&d0));
-
-    var g0 = M.GateNode{};
-    var m1 = M{ .root = &g0 };
-    try expectNull(m1.findLast());
-    try expectNull(m1.root.?.step());
-    try expectNull(m1.root.?.stepLocal());
-    try expectNull(m1.root.?.popNext());
-    try testing.expect(!m1.remove(&d0));
+    var d = M.DataNode{ .data = 0 };
+    var dn = M.Node{ .data = &d };
+    try expect(!dn.isHead());
+    try expect(dn.isData());
 }
 
-test "fundamental operations" {
+test "empty ring" {
     const M = MultiRing(u8);
-    var g0 = M.GateNode{};
-    var m0 = M{ .root = &g0 };
 
-    var r0_data_nodes = [_]M.DataNode{
-        .{ .data = 1 },
-        .{ .data = 7 },
-        .{ .data = 5 },
-        .{ .data = 8 },
-    };
-    g0.insertAfter(&r0_data_nodes[0]);
-    try testing.expectEqual(&r0_data_nodes[0], g0.next.?);
-    try testing.expectEqual(M.Node{ .gate = &g0 }, r0_data_nodes[0].next.?);
+    var h = M.HeadNode{};
+    var x = M.DataNode{ .data = 255 };
 
-    r0_data_nodes[0].insertAfter(&r0_data_nodes[1]);
-    try testing.expectEqual(M.Node{ .data = &r0_data_nodes[1] }, r0_data_nodes[0].next.?);
-    try testing.expectEqual(M.Node{ .gate = &g0 }, r0_data_nodes[1].next.?);
+    try expect(h.isRoot());
+    try expect(h.isEmpty());
+    try expectNull(h.isOpen());
+    try expectEqual(@as(usize, 0), h.count());
+    try expectEqual(@as(usize, 0), h.countAbove());
+    try expectEqual(@as(usize, 0), h.countBelow());
+    try expectNull(h.findLast());
+    try expectNull(h.findLastAbove());
+    try expectNull(h.findLastBelow());
+    try expectNull(h.findHeadAbove());
+    try expectEqual(&h, h.findHeadZ().?);
+    try expectEqual(&h, h.findRoot().?);
+    try expectNull(h.step());
+    try expectNull(h.stepAbove());
+    try expectNull(h.stepZ());
+    try expectNull(h.popNext());
+    try expect(!h.removeBelow(&x));
+    try expect(!h.remove(&x));
+}
 
-    r0_data_nodes[1].insertAfter(&r0_data_nodes[2]);
-    r0_data_nodes[2].insertAfter(&r0_data_nodes[3]);
+test "non-empty ring" {
+    const M = MultiRing(u8);
 
-    var g1 = M.GateNode{};
-    var r1_data_nodes = [_]M.DataNode{
-        .{ .data = 9 },
+    var h = M.HeadNode{};
+    var d = [_]M.DataNode{
         .{ .data = 0 },
-        .{ .data = 9 },
         .{ .data = 1 },
         .{ .data = 2 },
-        .{ .data = 2 },
-    };
-    g1.insertAfter(&r1_data_nodes[0]);
-
-    comptime var i = 0;
-    inline while (i < 5) : (i += 1) {
-        r1_data_nodes[i].insertAfter(&r1_data_nodes[i + 1]);
-    }
-
-    // attach subring r1 to ring r0
-    try m0.attachSubring(&r0_data_nodes[0], &g1);
-    try testing.expectEqual(&g1, r0_data_nodes[0].child.?);
-    try testing.expectEqual(&r0_data_nodes[0], g1.parent.?);
-
-    var g2 = M.GateNode{};
-    var r2_data_nodes = [_]M.DataNode{
-        .{ .data = 9 },
-        .{ .data = 8 },
-        .{ .data = 2 },
-        .{ .data = 2 },
-        .{ .data = 7 },
-    };
-    g2.insertAfter(&r2_data_nodes[0]);
-
-    comptime var j = 0;
-    inline while (j < 4) : (j += 1) {
-        r2_data_nodes[j].insertAfter(&r2_data_nodes[j + 1]);
-    }
-
-    try m0.attachSubring(&r0_data_nodes[2], &g2);
-
-    var g3 = M.GateNode{};
-    var r3_data_nodes = [_]M.DataNode{
-        .{ .data = 6 },
-        .{ .data = 0 },
+        .{ .data = 3 },
         .{ .data = 4 },
     };
-    g3.insertAfter(&r3_data_nodes[0]);
-    r3_data_nodes[0].insertAfter(&r3_data_nodes[1]);
-    r3_data_nodes[1].insertAfter(&r3_data_nodes[2]);
+    var x = M.DataNode{ .data = 255 };
 
-    try m0.attachSubring(&r2_data_nodes[1], &g3);
+    try expect(h.isRoot());
 
-    var g4 = M.GateNode{};
-    try m0.attachSubring(&r2_data_nodes[3], &g4);
+    h.insertAfter(&d[0]);
 
-    // step forward to the first data node
-    try testing.expectEqual(&r0_data_nodes[0], g0.step().?);
+    try expect(!h.isEmpty());
+    try expect(!h.isOpen().?);
+    try expectEqual(@as(usize, 1), h.count());
+    try expectEqual(@as(usize, 1), h.countBelow());
+    try expectEqual(@as(usize, 0), h.countAbove());
+    try expectEqual(&d[0], h.findLast().?);
+    try expectEqual(&d[0], h.findLastBelow().?);
+    try expectNull(h.findLastAbove());
+    try expectNull(h.findHeadAbove());
+    try expectEqual(&h, h.findHeadZ().?);
+    try expectEqual(&h, h.findRoot().?);
+    try expectEqual(&d[0], h.step().?);
+    try expectNull(h.stepAbove());
+    try expectEqual(&d[0], h.stepZ().?);
 
-    // descend into subring r1
-    try testing.expectEqual(&r1_data_nodes[0], r0_data_nodes[0].step());
+    try expectEqual(@as(usize, 0), d[0].countAfter());
+    try expectEqual(&d[0], d[0].findLast());
+    try expectEqual(&h, d[0].findHead().?);
+    try expectEqual(&h, d[0].findHeadZ().?);
+    try expectEqual(&h, d[0].findRoot().?);
+    try expectNull(d[0].step());
+    try expectNull(d[0].stepBelow());
+    try expectNull(d[0].stepZ());
 
-    // skip over an empty subring (r4)
-    try testing.expectEqual(&r2_data_nodes[4], r2_data_nodes[3].step());
+    try expect(!h.remove(&x));
+    try expect(!h.removeBelow(&x));
 
-    // loop back from the last data node to the first data node
-    try testing.expectEqual(&r0_data_nodes[0], r0_data_nodes[3].step());
+    try expect(h.remove(&d[0]));
+    try expect(h.isEmpty());
+    try expectEqual(@as(usize, 0), h.count());
+    try expectNull(h.findLast());
 
-    // step forward from the 1st data node to the 2nd data node in r1
-    try testing.expectEqual(&r1_data_nodes[1], r1_data_nodes[0].stepLocal());
+    h.append(&d[0]);
 
-    // loop back from the last data node to the first data node in r1
-    try testing.expectEqual(&r1_data_nodes[0], r1_data_nodes[5].stepLocal());
+    try expect(!h.isEmpty());
+    try expectEqual(@as(usize, 1), h.count());
+    try expectEqual(&d[0], h.findLast().?);
 
-    // find the last data node in the m0
-    try testing.expectEqual(&r0_data_nodes[3], m0.findLast().?);
+    try expectNull(d[0].popNext());
+    try expectEqual(&d[0], h.popNext().?);
 
-    // find the last data node in r1
-    try testing.expectEqual(&r1_data_nodes[5], g1.findLastLocal().?);
-    try testing.expectEqual(&r1_data_nodes[5], r1_data_nodes[0].findLastLocal());
+    try expect(h.isEmpty());
+    try expectEqual(@as(usize, 0), h.count());
+    try expectNull(h.findLast());
 
-    // find the last data node in r4 (there isn't one)
-    try expectNull(g4.findLastLocal());
+    h.extend(&d);
 
-    // remove a data node in the m0 (in r3)
-    try testing.expect(m0.remove(&r3_data_nodes[2]));
-    try testing.expectEqual(M.Node{ .gate = &g3 }, r3_data_nodes[1].next.?);
-    try expectNull(r3_data_nodes[2].next);
+    try expect(!h.isEmpty());
+    try expect(!h.isOpen().?);
+    try expectEqual(@as(usize, 5), h.count());
+    try expectEqual(@as(usize, 5), h.countBelow());
+    try expectEqual(&d[4], h.findLast().?);
+    try expectEqual(&d[4], h.findLastBelow().?);
+    try expectEqual(&d[0], h.step().?);
 
-    // try to remove a data node that isn't in the m0
-    var d = M.DataNode{ .data = 0 };
-    try testing.expect(!m0.remove(&d));
-    try expectNull(d.next);
+    try expectEqual(@as(usize, 4), d[0].countAfter());
+    try expectEqual(&d[1], d[0].step().?);
+    try expectEqual(&d[2], d[1].step().?);
+    try expectEqual(&d[3], d[2].step().?);
+    try expectEqual(&d[4], d[3].step().?);
+    try expectNull(d[4].step());
 
-    // pop a data node from a data node in r3
-    try testing.expectEqual(&r3_data_nodes[1], r3_data_nodes[0].popNext().?);
-    try testing.expectEqual(M.Node{ .gate = &g3 }, r3_data_nodes[0].next.?);
+    d[2].insertAfter(&x);
+    try expectEqual(@as(usize, 5), d[0].countAfter());
+    try expectEqual(&x, d[2].stepZ().?);
+    try expectEqual(&x, d[2].popNext().?);
+    try expectEqual(@as(usize, 4), d[0].countAfter());
 
-    // pop a data node from the r3 gate node
-    try testing.expectEqual(&r3_data_nodes[0], g3.popNext().?);
-    try expectNull(g3.next);
+    h.rotate();
 
-    // try to pop the next data node from g3 (there isn't one)
-    try expectNull(g3.popNext());
-    try expectNull(g3.next);
-
-    // pop r3 (now empty) from r2
-    try testing.expectEqual(&g3, r2_data_nodes[1].popSubring().?);
-    try expectNull(r2_data_nodes[1].child);
-    try expectNull(g3.parent);
-    try testing.expectEqual(&r2_data_nodes[2], r2_data_nodes[1].step());
-
-    // append a new node to the end of the m0
-    var r = M.DataNode{ .data = 0 };
-    m0.append(&r);
-    try testing.expectEqual(&r, m0.findLast().?);
-
-    // append a new node to the end of r1
-    var s = M.DataNode{ .data = 1 };
-    g1.append(&s);
-    try testing.expectEqual(&s, g1.findLastLocal().?);
-
-    // try to attach subrings inappropriately
-    try testing.expectError(
-        MultiRingError.DataNodeAlreadyHasChild,
-        m0.attachSubring(&r0_data_nodes[0], &g3),
-    );
-    try testing.expectError(
-        MultiRingError.GateNodeAlreadyHasParent,
-        m0.attachSubring(&r1_data_nodes[0], &g2),
-    );
-    try testing.expectError(
-        MultiRingError.UnsafeLoopCreationAttempt,
-        m0.attachSubring(&r1_data_nodes[0], &g0),
-    );
+    try expectEqual(&d[1], h.stepZ().?);
+    try expectEqual(&d[0], h.findLastBelow().?);
 }
 
-test "ring skips" {
+test "non-empty open ring (linked list)" {
     const M = MultiRing(u8);
 
-    var g0 = M.GateNode{};
-    var d0: M.DataNode = .{ .data = 0 };
-    g0.insertAfter(&d0);
+    var h = M.HeadNode{};
+    var d = [_]M.DataNode{
+        .{ .data = 0 },
+        .{ .data = 1 },
+        .{ .data = 2 },
+        .{ .data = 3 },
+        .{ .data = 4 },
+    };
 
-    var g1 = M.GateNode{};
-    var d1: M.DataNode = .{ .data = 1 };
-    g1.insertAfter(&d1);
+    h.extend(&d);
+    h.open();
+    try expect(h.isOpen().?);
+    try expectNull(h.findHeadAbove());
+    try expectNull(h.findHeadZ());
+    try expectEqual(&h, h.findRoot().?);
+    try expectEqual(@as(usize, 5), h.count());
+    try expectEqual(@as(usize, 4), d[0].countAfter());
+    try expectEqual(&d[4], d[0].findLast());
+    try expectNull(d[0].findHead());
+    try expectNull(d[0].findHeadZ());
+    try expectNull(d[0].findRoot());
 
-    var g2 = M.GateNode{};
-    var d2: M.DataNode = .{ .data = 2 };
-    g2.insertAfter(&d2);
+    var x = M.DataNode{ .data = 255 };
+    try expect(!h.remove(&x));
+    try expect(!d[0].removeAfter(&x));
 
-    var m0 = M{ .root = &g0 };
-    try m0.attachSubring(&d0, &g1);
-    try m0.attachSubring(&d1, &g2);
+    try expect(h.remove(&d[4]));
+    try expectEqual(@as(usize, 4), h.count());
+    try expect(h.isOpen().?);
 
-    try testing.expectEqual(&d0, d2.step());
-    try testing.expectEqual(&d2, m0.findLast().?);
-    try testing.expect(m0.remove(&d2));
+    try expect(d[0].removeAfter(&d[3]));
+    try expectEqual(@as(usize, 3), h.count());
+    try expect(h.isOpen().?);
+
+    try expectEqual(&d[2], d[1].popNext().?);
+    try expectEqual(@as(usize, 2), h.count());
+    try expect(h.isOpen().?);
+
+    try expectEqual(&d[0], h.popNext().?);
+    try expectEqual(@as(usize, 1), h.count());
+    try expect(h.isOpen().?);
+
+    try expectEqual(&d[1], h.findLast().?);
+    d[1].insertManyAfter(d[2..]);
+    try expect(h.isOpen().?);
+    try expectEqual(@as(usize, 4), h.count());
+
+    h.close();
+    try expect(!h.isOpen().?);
+}
+
+test "non-empty ring containing subrings" {
+    const M = MultiRing(u8);
+
+    var h0 = M.HeadNode{};
+    var d0 = [_]M.DataNode{
+        .{ .data = 0 },
+        .{ .data = 1 },
+        .{ .data = 2 },
+        .{ .data = 3 },
+        .{ .data = 4 },
+    };
+    h0.extend(&d0);
+
+    var h1 = M.HeadNode{};
+    d0[0].attachMultiRing(&h1);
+
+    try expectEqual(@as(usize, 5), h0.countBelow());
+    try expectEqual(&h1, h0.findHeadZ().?);
+
+    try expectEqual(@as(usize, 4), d0[0].countAfterZ());
+    try expectEqual(@as(usize, 0), d0[4].countAfterZ());
+    try expectEqual(&h0, d0[0].findHead().?);
+    try expectEqual(&h1, d0[0].findHeadZ().?);
+    try expectEqual(&d0[1], d0[0].step().?);
+    try expectNull(d0[0].stepBelow());
+    try expectEqual(&d0[1], d0[0].stepZ().?);
+
+    try expectNull(h1.step());
+    try expect(!h1.isRoot());
+    try expectEqual(@as(usize, 4), h1.countAbove());
+    try expectEqual(&d0[4], h1.findLastAbove().?);
+    try expectEqual(&h0, h1.findHeadZ().?);
+    try expectEqual(&h0, h1.findRoot().?);
+    try expectEqual(&d0[1], h1.stepAbove().?);
+    try expectEqual(&d0[1], h1.stepZ().?);
+
+    var h2 = M.HeadNode{};
+    var d2 = M.DataNode{ .data = 5 };
+    h2.append(&d2);
+    d0[2].attachMultiRing(&h2);
+
+    try expectEqual(@as(usize, 5), h0.count());
+    try expectEqual(@as(usize, 6), h0.countBelow());
+    try expectEqual(&d0[4], h0.findLast().?);
+    try expectEqual(&d0[4], h0.findLastBelow().?);
+
+    try expectEqual(&h2, d0[1].findHeadZ().?);
+    try expectEqual(&d0[3], d0[2].step().?);
+    try expectEqual(&d2, d0[2].stepBelow().?);
+    try expectEqual(&d2, d0[2].stepZ().?);
+
+    try expectEqual(@as(usize, 2), h2.countAbove());
+    try expectEqual(&d0[4], d2.findLastZ());
+    try expectEqual(&d0[4], h2.findLastAbove().?);
+
+    try expectEqual(&h0, h2.findHeadAbove().?);
+    try expectEqual(&d2, h2.step().?);
+    try expectEqual(&d0[3], h2.stepAbove().?);
+    try expectEqual(&d2, h2.stepZ().?);
+
+    try expectEqual(@as(usize, 2), d2.countAfterZ());
+    try expectEqual(&h2, d2.findHead().?);
+    try expectEqual(&h2, d2.findHeadZ().?);
+    try expectEqual(&h0, d2.findRoot().?);
+    try expectEqual(&d0[3], d2.stepZ().?);
+
+    var h3 = M.HeadNode{};
+    var d3 = M.DataNode{ .data = 6 };
+    h3.append(&d3);
+    d0[4].attachMultiRing(&h3);
+
+    try expectEqual(@as(usize, 5), h0.count());
+    try expectEqual(@as(usize, 7), h0.countBelow());
+    try expectEqual(&d0[4], h0.findLast().?);
+    try expectEqual(&d3, h0.findLastBelow().?);
+
+    try expectEqual(@as(usize, 6), h1.countAbove());
+    try expectEqual(@as(usize, 3), h2.countAbove());
+    try expectEqual(@as(usize, 0), h3.countAbove());
+
+    try expectEqual(&d3, h2.findLastAbove().?);
+
+    try expectNull(h3.findLastAbove());
+    try expectEqual(&h0, h3.findHeadAbove().?);
+    try expectEqual(&h3, h3.findHeadZ().?);
+    try expectEqual(&h0, h3.findRoot().?);
+    try expectNull(h3.stepAbove());
+    try expectEqual(&d3, h3.stepZ().?);
+    try expectNull(d3.stepZ());
+
+    try expectEqual(&d3, d0[0].findLastZ());
+    try expectEqual(@as(usize, 6), d0[0].countAfterZ());
+    try expectEqual(@as(usize, 1), d0[4].countAfterZ());
+    try expectEqual(@as(usize, 0), d3.countAfterZ());
+
+    try expect(!h0.remove(&d2));
+    try expectEqual(@as(usize, 7), h0.countBelow());
+
+    try expect(h0.remove(&d0[3]));
+    try expectEqual(@as(usize, 4), h0.count());
+    try expectEqual(&d0[4], d0[2].step().?);
+    try expectEqual(&d0[4], h2.stepAbove().?);
+
+    var d1 = [_]M.DataNode{
+        .{ .data = 7 },
+        .{ .data = 8 },
+        .{ .data = 9 },
+    };
+    h1.insertManyAfter(&d1);
+    try expectEqual(@as(usize, 3), h1.count());
+    try expectEqual(@as(usize, 9), h0.countBelow());
+
+    try expectEqual(&h1, d0[0].detachMultiRing().?);
+    try expectEqual(@as(usize, 3), h1.count());
+    try expectEqual(@as(usize, 6), h0.countBelow());
+
+    try expect(h0.removeBelow(&d3));
+    try expect(h3.isEmpty());
+    try expectEqual(@as(usize, 5), h0.countBelow());
+
+    var x = M.DataNode{ .data = 255 };
+    var y = M.DataNode{ .data = 255 };
+
+    d0[4].insertAfter(&x);
+    h0.append(&y);
+    try expectEqual(&x, h3.stepAbove().?);
+    try expectEqual(@as(usize, 6), h0.count());
+
+    try expectEqual(&x, d0[4].popNext().?);
+    try expectEqual(&y, h3.stepAbove().?);
+    try expect(h2.removeAbove(&y));
+    try expectNull(h3.stepAbove());
+    try expectEqual(@as(usize, 4), h0.count());
+
+    try expectEqual(&h3, d0[4].detachMultiRing().?);
+    try expect(h3.isRoot());
+    try expectEqual(@as(usize, 4), h0.count());
+    try expectEqual(@as(usize, 5), h0.countBelow());
+    try expectEqual(&d0[4], h0.findLast().?);
+    try expectEqual(&d0[4], h0.findLastBelow().?);
+
+    try expect(d2.removeAfterZ(&d0[4]));
+    try expectEqual(@as(usize, 4), h0.countBelow());
+    try expectNull(d0[3].stepZ());
+
+    try expectEqual(&d0[2], d0[1].popNext().?);
+    try expectEqual(@as(usize, 2), h0.countBelow());
+    try expect(h2.isRoot());
+    try expect(!d2.removeAfterZ(&d0[4]));
+}
+
+test "rootless multiring" {
+    const M = MultiRing(u8);
+
+    var m = M{};
+    var x = M.DataNode{ .data = 255 };
+
+    try expect(m.isEmpty());
+    try expectEqual(@as(usize, 0), m.len());
+    try expectNull(m.findLast());
+    try expect(!m.remove(&x));
+}
+
+test "multiring comprising exactly one ring" {
+    const M = MultiRing(u8);
+
+    var h = M.HeadNode{};
+    var m = M{ .root = &h };
+    var d = [_]M.DataNode{
+        .{ .data = 0 },
+        .{ .data = 1 },
+        .{ .data = 2 },
+        .{ .data = 3 },
+        .{ .data = 4 },
+    };
+
+    m.append(&d[0]);
+    try expect(!m.isEmpty());
+    try expectEqual(@as(usize, 1), m.len());
+    try expectEqual(&d[0], m.findLast().?);
+
+    try expect(m.remove(&d[0]));
+    try expect(m.isEmpty());
+    try expectEqual(@as(usize, 0), m.len());
+    try expectNull(m.findLast());
+
+    m.extend(&d);
+    try expect(!m.isEmpty());
+    try expectEqual(@as(usize, 5), m.len());
+    try expectEqual(&d[4], m.findLast().?);
 }
