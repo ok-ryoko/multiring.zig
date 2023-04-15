@@ -18,11 +18,11 @@
 
 # multiring.zig
 
-The *multiring* is a singly [linked][linked list], cyclic and [hierarchical][tree] [abstract data type] that supports forward traversal. multiring.zig implements the multiring in the [Zig language][Zig].
+The *multiring* is a [hierarchical][tree], [forwardly linked][linked list] and circularly linked [abstract data type]. multiring.zig implements the multiring in the [Zig language][Zig].
 
 > ⚠ The multiring, as implemented in this repository, hasn’t been specified and verified formally.
 
-The following animation shows how a multiring is traversed. The colored spheres represent gate (sentinel) nodes that control the traversal of the data nodes.
+Here’s how a multiring is traversed:
 
 <p align="center">
   <picture>
@@ -38,25 +38,38 @@ The following animation shows how a multiring is traversed. The colored spheres 
       src="./docs/img/multiring-traversal-github-light.gif"
       title="multiring traversal loop"
       alt="Loop of the counter-clockwise traversal of a multiring comprising 18 data nodes arranged in 5 rings at 3 levels"
-      height="320"
+      width="480"
     >
   </picture>
 </p>
 
-The counter-clockwise orientation of traversal is arbitrary—we obtain it by having the normal to the plane of each ring point up and applying the [right-hand rule]. We chose a 3D representation to better visualize the depth of the traversal.
+The counter-clockwise orientation of traversal in the animation above is arbitrary—we obtain it by having the normal to the plane of each ring point up and applying the [right-hand rule]. We chose a 3D representation to better visualize the depth of the traversal.
+
+## Properties of this module
+
+- Rich linked list-like interface
+- Recursion used sparingly
+- No arrays or memory management
+- No dependence on the Zig standard library
 
 ## Importing multiring.zig
 
-Begin by placing the *multiring.zig* file into your Zig project. You may achieve this using [`git submodule`][submodules], e.g.,
+### Include the source code in your project
+
+Begin by including the *multiring.zig* file in your Zig project. You may achieve this using [`git submodule`][Git submodules], e.g.,
 
 ```console
 mkdir deps
 git submodule add https://github.com/ok-ryoko/multiring.zig deps/multiring.zig
 ```
 
-Alternatively, you may clone the repository elsewhere and use a tool of your choice, e.g., [rsync], to copy the *multiring.zig* file directly to your project. This strategy is more space-efficient but requires you to manage updates to multiring.zig manually.
+However, this repository contains images, animations and developer documentation adding up to around 1 MB. You may want to avoid including all this content in a Git submodule given that the source code adds up to less than 100 kB.
 
-In your *build.zig* file, add the following line (assuming you’re building an executable):
+A space-conscious alternative is to clone this repository elsewhere and leverage an utility such as [rsync] to mirror only the *multiring.zig* file to your project’s repository. You’ll want to schedule this operation to take place each time you integrate new upstream changes into *multiring.zig*.
+
+### Update your build file
+
+Add the following line to your *build.zig* file at an appropriate location:
 
 ```zig
 exe.addPackagePath("multiring", "path/to/multiring.zig");
@@ -67,12 +80,11 @@ exe.addPackagePath("multiring", "path/to/multiring.zig");
 ```zig
 const multiring = @import("multiring");
 const MultiRing = multiring.MultiRing;
-const MultiRingError = multiring.MultiRingError;
 ```
 
 ## Using multiring.zig
 
-Please see the tests in [*multiring_test.zig*][multiring_test.zig].
+Please see the tests in [*multiring_test.zig*].
 
 The `MultiRing` API is still unstable; [Ryoko] doesn’t recommend using this library in production.
 
@@ -104,7 +116,7 @@ multiring.zig is free and open source software [licensed under the MIT license][
 
 ## Acknowledgements
 
-The implementation is inspired by the implementation of [`std.SinglyLinkedList`][std.SinglyLinkedList] in Zig 0.9.1.
+The implementation is inspired by the implementation of [`std.SinglyLinkedList`] in Zig 0.9.1.
 
 The following resources have been instrumental in preparing this repository for community contributions:
 
