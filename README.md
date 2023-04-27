@@ -84,7 +84,7 @@ const MultiRing = multiring.MultiRing;
 
 ## Using multiring.zig
 
-Please see the tests in [*multiring_test.zig*].
+Please see the tests in [*multiring_test.zig*][multiring_test.zig].
 
 The `MultiRing` API is still unstable; [Ryoko] doesn’t recommend using this library in production.
 
@@ -116,7 +116,7 @@ multiring.zig is free and open source software [licensed under the MIT license][
 
 ## Acknowledgements
 
-The implementation is inspired by the implementation of [`std.SinglyLinkedList`] in Zig 0.9.1.
+The implementation is inspired by the implementation of [`std.SinglyLinkedList`][std.SinglyLinkedList] in Zig 0.9.1.
 
 The following resources have been instrumental in preparing this repository for community contributions:
 
@@ -128,6 +128,7 @@ The following resources have been instrumental in preparing this repository for 
 [code of conduct]: ./CODE_OF_CONDUCT.md
 [contributing guidelines]: ./CONTRIBUTING.md
 [discussions]: https://github.com/ok-ryoko/multiring.zig/discussions
+[Git submodules]: https://git-scm.com/book/en/v2/Git-Tools-Submodules
 [GitHub documentation]: https://docs.github.com/en
 [github/docs]: https://github.com/github/docs
 [issue tracker]: https://github.com/ok-ryoko/multiring.zig/issues
@@ -139,7 +140,6 @@ The following resources have been instrumental in preparing this repository for 
 [rsync]: https://rsync.samba.org/
 [Ryoko]: https://github.com/ok-ryoko
 [std.SinglyLinkedList]: https://github.com/ziglang/zig/blob/0.9.1/lib/std/linked_list.zig
-[submodules]: https://git-scm.com/book/en/v2/Git-Tools-Submodules
 [tokio contributing guidelines]: https://github.com/tokio-rs/tokio/blob/d7d5d05333f7970c2d75bfb20371450b5ad838d7/CONTRIBUTING.md
 [tree]: https://en.wikipedia.org/wiki/Tree_(data_structure)
 [Zig]: https://ziglang.org/
