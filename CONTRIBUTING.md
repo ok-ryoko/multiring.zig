@@ -65,7 +65,7 @@ To work on multiring.zig, you’ll need some or all of following software:
 - [Git] 2.9 or newer
 - [Zig] 0.10.1, for work on the multiring data structure
 - [ShellCheck] 0.8, for [Git hook][githooks] development
-- [yamllint] 1.30, for [GitHub issue forms][syntax for issue forms] and [GitHub Actions workflows]
+- [yamllint] 1.31, for [GitHub issue forms][syntax for issue forms] and [GitHub Actions workflows]
 
 ### Claiming an issue
 
@@ -382,7 +382,7 @@ These guidelines exist to foster a seamless and open contributing experience for
 [GitHub Actions workflows]: https://docs.github.com/en/actions/using-workflows
 [GitHub Actions]: https://github.com/features/actions
 [GitHub issues]: https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues
-[GitHub-hosted Ubuntu 22.04 LTS runner image]: https://github.com/actions/runner-images/blob/ubuntu22/20221212.1/images/linux/Ubuntu2204-Readme.md
+[GitHub-hosted Ubuntu 22.04 LTS runner image]: https://github.com/actions/runner-images/blob/releases/ubuntu22/20230426/images/linux/Ubuntu2204-Readme.md
 [governance]: ./GOVERNANCE.md
 [How do I resolve merge conflicts in my Git repository?]: https://stackoverflow.com/q/161813
 [How to Write a Git Commit Message]: https://cbea.ms/git-commit/
