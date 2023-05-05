@@ -318,16 +318,9 @@ pub fn MultiRing(comptime T: type) type {
                     if (first.next) |n| {
                         switch (n) {
                             .head => {},
-                            .data => |d| {
-                                this.next = d;
-                                first.next = last.next;
-                                if (first.next_below) |h| {
-                                    h.next_above = .{ .head = this };
-                                }
-                                last.next = .{ .data = first };
-                                if (last.next_below) |h| {
-                                    h.next_above = .{ .data = first };
-                                }
+                            .data => {
+                                var d = this.popNext().?;
+                                last.insertAfter(d);
                             },
                         }
                     }
