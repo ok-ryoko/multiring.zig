@@ -28,7 +28,8 @@ pub fn MultiRing(comptime T: type) type {
                 return self == .data;
             }
 
-            /// Return the last data node in this ring
+            /// Return the last data node in this ring; if this is a head node and this ring is
+            /// empty, then return null
             ///
             pub fn findLast(self: Node) ?*DataNode {
                 return switch (self) {
@@ -36,7 +37,8 @@ pub fn MultiRing(comptime T: type) type {
                 };
             }
 
-            /// Return the next head node in this multiring after this node
+            /// Return the next head node in this multiring after this node if it can be found and
+            /// null otherwise
             ///
             pub fn findHeadZ(self: Node) ?*HeadNode {
                 return switch (self) {
@@ -52,7 +54,8 @@ pub fn MultiRing(comptime T: type) type {
                 };
             }
 
-            /// Return the next data node in this ring
+            /// Return the next data node in this ring; if this ring is empty or this is the last
+            /// data node in this ring, then return null
             ///
             pub fn step(self: Node) ?*DataNode {
                 return switch (self) {
@@ -60,7 +63,11 @@ pub fn MultiRing(comptime T: type) type {
                 };
             }
 
-            /// Return the next data node in this multiring
+            /// Return the next data node in this multiring; return null if this is...
+            ///
+            ///   - ... the root of an empty multiring
+            ///   - ... the last data node in a multiring
+            ///   - ... any head node after the last data node in a multiring
             ///
             pub fn stepZ(self: Node) ?*DataNode {
                 return switch (self) {
@@ -68,7 +75,8 @@ pub fn MultiRing(comptime T: type) type {
                 };
             }
 
-            /// Insert a data node immediately after this node
+            /// Insert a data node immediately after this node, closing this ring if it is empty;
+            /// assume that `node` is not already in this multiring
             ///
             pub fn insertAfter(self: Node, node: *DataNode) void {
                 switch (self) {
@@ -76,7 +84,8 @@ pub fn MultiRing(comptime T: type) type {
                 }
             }
 
-            /// Insert many data nodes immediately after this node
+            /// Insert many data nodes immediately after this node, closing this ring if it is
+            /// empty; assume that none of `nodes` is already in this multiring
             ///
             pub fn insertManyAfter(self: Node, nodes: []DataNode) void {
                 switch (self) {
@@ -84,7 +93,8 @@ pub fn MultiRing(comptime T: type) type {
                 }
             }
 
-            /// Remove and return the next data node in this ring
+            /// Remove and return the next data node in this ring; if this ring is empty or this is
+            /// the last data node in this ring, then return null
             ///
             pub fn popNext(self: Node) ?*DataNode {
                 return switch (self) {
@@ -224,9 +234,8 @@ pub fn MultiRing(comptime T: type) type {
                 } else null;
             }
 
-            /// Return the first head node in this multiring after this head node if it can be
-            /// found and null otherwise
-            ///
+            /// Return the next head node in this multiring after this node if it can be found and
+            /// null otherwise
             pub fn findHeadZ(this: *HeadNode) ?*HeadNode {
                 return if (this.next) |first| blk: {
                     break :blk first.findHeadZ();
