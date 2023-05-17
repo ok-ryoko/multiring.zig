@@ -116,7 +116,9 @@ multiring.zig is free and open source software [licensed under the MIT license][
 
 ## Acknowledgements
 
-The implementation is inspired by the implementation of [`std.SinglyLinkedList`][std.SinglyLinkedList] in Zig 0.9.1.
+The multiring.zig logos and traversal animations were made in [Inkscape] and [Blender], respectively.
+
+The initial implementation was inspired by Zig 0.9.1’s [`std.SinglyLinkedList`][std.SinglyLinkedList].
 
 The following resources have been instrumental in preparing this repository for community contributions:
 
@@ -125,12 +127,14 @@ The following resources have been instrumental in preparing this repository for 
 - [the tokio contributing guidelines][tokio contributing guidelines]
 
 [abstract data type]: https://en.wikipedia.org/wiki/Abstract_data_type
+[Blender]: https://www.blender.org
 [code of conduct]: ./CODE_OF_CONDUCT.md
 [contributing guidelines]: ./CONTRIBUTING.md
 [discussions]: https://github.com/ok-ryoko/multiring.zig/discussions
 [Git submodules]: https://git-scm.com/book/en/v2/Git-Tools-Submodules
 [GitHub documentation]: https://docs.github.com/en
 [github/docs]: https://github.com/github/docs
+[Inkscape]: https://inkscape.org/
 [issue tracker]: https://github.com/ok-ryoko/multiring.zig/issues
 [license]: ./LICENSE.txt
 [linked list]: https://en.wikipedia.org/wiki/Linked_list
