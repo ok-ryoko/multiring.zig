@@ -46,3 +46,32 @@ A **data node** is an object bearing:
 - an optional link to the next node in the ring;
 - an optional link to the head node of a subring, and
 - data of a compile time-known type.
+
+## Constraints
+
+Constraints are important because they:
+
+- help to define the personality of the project;
+- encourage simplicity, and
+- may require us to discover creative ways to solve problems.
+
+### Programming language choice set
+
+The implementation shall be expressed using exactly one of [ANSI C], [Go] and [Zig]—all simple, compiled and statically typed languages featuring imperative programming and raw pointers.
+
+### No dynamic memory allocation
+
+The implementation shall neither allocate any memory on the heap nor deallocate any memory from the heap.
+
+### No sequential types
+
+The implementation shall not depend on any type backed by contiguous memory.
+
+### No dependence on any external package, module or library
+
+The implementation shall have no external dependencies. However, supporting code (build, tests, etc.) may depend on the chosen language’s standard library. Supporting tools such as [Make] are also permitted.
+
+[ANSI C]: https://en.wikipedia.org/wiki/ANSI_C
+[Go]: https://go.dev/
+[Make]: https://www.gnu.org/software/make/
+[Zig]: https://ziglang.org/
