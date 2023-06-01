@@ -180,6 +180,10 @@ See also: [Pull request approval criteria](#pull-request-approval-criteria), [At
 
 ## Project practices and guidelines
 
+### Design
+
+We maintain an informal record of the implementation’s design in [DESIGN.md]. We encourage all new contributors to familiarize themselves with this document.
+
 ### Tracking and closing issues
 
 We use [GitHub issues] to track the following types of work:
@@ -368,6 +372,7 @@ These guidelines exist to foster a seamless and open contributing experience for
 [Conventional Commits 1.0.0]: https://www.conventionalcommits.org/en/v1.0.0/
 [Create a pull request]: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request
 [DEIB]: https://www.findem.ai/knowledge-center/what-is-diversity-equity-inclusion-and-belonging
+[DESIGN.md]: ./docs/DESIGN.md
 [discussions]: https://github.com/ok-ryoko/multiring.zig/discussions
 [documentation]: https://github.com/ok-ryoko/multiring.zig/labels/documentation
 [EditorConfig]: https://editorconfig.org/
