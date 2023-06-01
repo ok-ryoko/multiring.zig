@@ -161,6 +161,25 @@ To finish, we aggregate our node definitions into a compile-time generic and def
 
 Every head node already defines a ring implicitly, so we don’t define a dedicated ring type. This helps us to limit the complexity of the code base.
 
+## Undefined behavior
+
+There are several invariants we can’t express easily in our definitions:
+
+- For any head node `h`, `h.next` represents a link to none other than the first data node in the ring defined by `h`, and `h.next_above` represents a link to none other than the next node in the ring’s superring
+- For any pair of distinct head nodes `h1` and `h2` in a multiring, `h1.next.? != h2.next.?` is `true` and `h1.next_above != h2.next_above` is `true`
+- For any data node `d`, `d.next` represents a link to none other than either the next data node in the ring of which `d` is a member (if `d` isn’t the last data node in the ring) or the head node of the ring, and `d.next_below` represents a link to none other than the head node of the subring at `d`
+- For any pair of distinct data nodes `d1` and `d2` in a multiring, `d1.next.? != d2.next.?` is `true` and `d1.next_below.? != d2.next_below.?` is `true`
+
+Constraints that we can’t articulate in our chosen language are sources of undefined behavior. Examples of undefined behavior include:
+
+- Linking any node to itself
+- Linking a data node in one ring to a data node in another ring
+- Inserting one or more data nodes already in the multiring
+- Attaching a subring that already has a superring to a data node
+- Attaching a subring to a data node that already has a subring
+
+We could try addressing some of these constraints by inserting new types and logic at the cost of increasing the complexity of the design. Instead, we opt to trust users and bestow them with extra power, while also providing interfaces that make it possible for client code to avoid undefined behavior altogether.
+
 [ANSI C]: https://en.wikipedia.org/wiki/ANSI_C
 [Clang]: https://clang.llvm.org/
 [GNU Compiler Collection]: https://gcc.gnu.org/
