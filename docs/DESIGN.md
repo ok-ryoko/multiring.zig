@@ -71,7 +71,29 @@ The implementation shall not depend on any type backed by contiguous memory.
 
 The implementation shall have no external dependencies. However, supporting code (build, tests, etc.) may depend on the chosen language’s standard library. Supporting tools such as [Make] are also permitted.
 
+## Choice of programming language
+
+When handling nodes, there will be some contexts in which the type of node is important and others in which it is not. Thus, our chosen language should make it easy for us to achieve polymorphism, preferably over a fixed finite set of types. (There are only and exactly two types of node.) Zig’s [tagged union] is a perfect match. Go gives us [interfaces], but they are too powerful—we don’t need to be able to define arbitrarily many types of node. Moreover, Go has no native enum type (enums are emulated using [iota]). C gives us only plain enums to work with.
+
+Zig equips us with [unreachable code] as well as capture syntax for dereferencing optional pointers. C and Go don’t provide equivalent features.
+
+C and Zig require us to manage dynamically allocated memory manually. We should therefore be able to guarantee that our implementation doesn’t interact with the heap by writing zero lines of memory management code. Providing the same guarantee is more difficult in a garbage-collected language like Go.
+
+We value maintainability, so we believe that our chosen language should grace us with a robust development experience. Go tells the strongest narrative through the `go` CLI, exposing commands for formatting, linting, building and testing Go code as well as managing Go modules. Zig’s story is similarly compelling although incomplete—there’s no dedicated static analysis tool and the package manager isn’t yet stable. On the other hand, C doesn’t provide standardized developer tools, leaving us to mix and match the components we need, down to the implementation of the language itself. Do we use the [GNU Compiler Collection], [Clang]/[LLVM] or something else? Such questions impose a relatively expensive research burden for a language that we may not end up using.
+
+C is over 50 years old and stable, having seen ubiquitous use as well as a series of international standards and competing toolchains. As of May 2023, it takes 2nd place on the [TIOBE Index]. Go is not as mature as C (it’s over 10 years old) but is stable and widely used, ranking 12th on the TIOBE Index. Go has carved a niche out for itself in the web, container and command-line utility ecosystems. In contrast, Zig is neither stable nor widely used. Choosing Zig over C and Go means allocating development resources to staying in step with the latest stable release of the language and taking on the risk of breaking changes. It also means diminishing the accessibility of the project.
+
+On the basis of these considerations, the repository owner chose to implement the multiring in Zig.
+
 [ANSI C]: https://en.wikipedia.org/wiki/ANSI_C
+[Clang]: https://clang.llvm.org/
+[GNU Compiler Collection]: https://gcc.gnu.org/
 [Go]: https://go.dev/
+[interfaces]: https://go.dev/ref/spec#Interface_types
+[iota]: https://go.dev/ref/spec#Iota
+[LLVM]: https://www.llvm.org/
 [Make]: https://www.gnu.org/software/make/
+[tagged union]: https://ziglang.org/documentation/master/#Tagged-union
+[TIOBE Index]: https://www.tiobe.com/tiobe-index/
+[unreachable code]: https://ziglang.org/documentation/master/#unreachable
 [Zig]: https://ziglang.org/
