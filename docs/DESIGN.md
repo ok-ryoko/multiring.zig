@@ -180,6 +180,14 @@ Constraints that we can’t articulate in our chosen language are sources of und
 
 We could try addressing some of these constraints by inserting new types and logic at the cost of increasing the complexity of the design. Instead, we opt to trust users and bestow them with extra power, while also providing interfaces that make it possible for client code to avoid undefined behavior altogether.
 
+## Relationship with linked lists, trees and graphs
+
+Conceptually, the multiring extends the singly linked list with hierarchical properties. In fact, we could emulate a singly linked list using an open root ring with no subrings.
+
+Structurally, the multiring resembles the binary tree (every node has up to two descendents). In fact, we could visit every data node exactly once in a way that resembles preorder traversal without recursion or dynamic memory allocation. However, the multiring isn’t a tree because it contains cycles.
+
+At best, we can say that multirings comprise a family of directed graphs.
+
 [ANSI C]: https://en.wikipedia.org/wiki/ANSI_C
 [Clang]: https://clang.llvm.org/
 [GNU Compiler Collection]: https://gcc.gnu.org/
