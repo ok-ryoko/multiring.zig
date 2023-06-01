@@ -85,6 +85,82 @@ C is over 50 years old and stable, having seen ubiquitous use as well as a serie
 
 On the basis of these considerations, the repository owner chose to implement the multiring in Zig.
 
+## Type definitions
+
+When defining our types, we’ll be using optional (nullable) pointers. Where possible, we’ll attach semantic meaning to the null pointer so that it isn’t just an artifact of our implementation.
+
+### Node
+
+```zig
+pub const Node = union(enum) {
+    head: *HeadNode,
+    data: *DataNode,
+
+    // ...
+};
+```
+
+Defining `Node` as a tagged union enables us to achieve polymorphism over a finite set of types.
+
+### Head node
+
+```zig
+pub const HeadNode = struct {
+    next: ?*DataNode = null,
+    next_above: ?Node = null,
+
+    // ...
+};
+```
+
+`next` represents a link to the first data node in the ring. When `next` is `null`, the ring is empty; otherwise, the ring is nonempty. `next_above` represents a link to the next node in the superring. When `next_above` is null, the ring is the root ring; otherwise, the ring is a subring of a superring. Both `next` and `next_above` are optional, so we can instantiate a head node without any links (equivalent to an empty root ring).
+
+### Data node
+
+```zig
+pub const DataNode = struct {
+    next: ?Node = null,
+    next_below: ?*HeadNode = null,
+    data: T,
+
+    // ...
+};
+```
+
+`next` represents a link to the next node in the ring. When `next` is null, the ring is open. `next_below` represents a link to the head node of a subring. When `next_below` is null, there is no subring at the data node. Since both fields are optional, we can instantiate a data node simply by populating the `data` field, which is of a parametrized and compile time-known type, `T`.
+
+### Multiring
+
+```zig
+pub fn MultiRing(comptime T: type) type {
+    return struct {
+        const Self = @This();
+
+        pub const Node = union(enum) {
+            // ...
+        };
+
+        pub const HeadNode = struct {
+            // ...
+        };
+
+        pub const DataNode = struct {
+            // ...
+        };
+
+        root: ?*HeadNode = null,
+
+        // ...
+    };
+}
+```
+
+To finish, we aggregate our node definitions into a compile-time generic and define a root. We should be able to use the head node interface to discover the remainder of the structure from the root. Since `root` is optional, we’re able to instantiate an empty multiring, deferring node creation and ring assembly.
+
+### Ring
+
+Every head node already defines a ring implicitly, so we don’t define a dedicated ring type. This helps us to limit the complexity of the code base.
+
 [ANSI C]: https://en.wikipedia.org/wiki/ANSI_C
 [Clang]: https://clang.llvm.org/
 [GNU Compiler Collection]: https://gcc.gnu.org/
