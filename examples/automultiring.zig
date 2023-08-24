@@ -31,7 +31,7 @@ pub fn AutoMultiRing(comptime T: type) type {
         const Rings = AutoHashMapUnmanaged(HeadNode, ArrayListUnmanaged(DataNode));
         const Id = u32;
 
-        pub const Node = union(enum) {
+        pub const Node = union(M.NodeTag) {
             head: HeadNode,
             data: DataNode,
         };

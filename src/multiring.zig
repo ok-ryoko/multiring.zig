@@ -15,7 +15,14 @@ pub fn MultiRing(comptime T: type) type {
 
         /// A node is either a head node or data node
         ///
-        pub const Node = union(enum) {
+        pub const NodeTag = enum {
+            head,
+            data,
+        };
+
+        /// Node is a pointer to either a head node or data node
+        ///
+        pub const Node = union(NodeTag) {
             head: *HeadNode,
             data: *DataNode,
 
