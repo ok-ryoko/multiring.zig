@@ -98,7 +98,7 @@ This module has not yet had any versioned releases, so dependents that favor rep
 
 ## Using multiring.zig
 
-Please see the tests in [*multiring_test.zig*][multiring_test.zig].
+Please see the tests in [*multiring_test.zig*][multiring_test.zig] as well as the [examples].
 
 The `MultiRing` API is still unstable; [Ryoko] doesn’t recommend using this library in production.
 
@@ -145,6 +145,7 @@ The following resources have been instrumental in preparing this repository for 
 [code of conduct]: ./CODE_OF_CONDUCT.md
 [contributing guidelines]: ./CONTRIBUTING.md
 [discussions]: https://github.com/ok-ryoko/multiring.zig/discussions
+[examples]: ./examples/
 [Git submodules]: https://git-scm.com/book/en/v2/Git-Tools-Submodules
 [GitHub documentation]: https://docs.github.com/en
 [github/docs]: https://github.com/github/docs
