@@ -6,6 +6,7 @@ on:
     paths:
       - 'src/**.zig'
       - 'build.zig'
+      - 'build.zig.zon'
 
   pull_request:
     branches:
@@ -13,9 +14,13 @@ on:
     paths:
       - 'src/**.zig'
       - 'build.zig'
+      - 'build.zig.zon'
+
+permissions:
+  contents: read
 
 jobs:
-  debug:
+  build:
     strategy:
       matrix:
         version:
@@ -25,7 +30,7 @@ jobs:
       - ubuntu-22.04
 
     steps:
-      - name: Checkout
+      - name: Checkout last commit on branch main
         uses: actions/checkout@v3
 
       - name: Setup Zig
@@ -37,10 +42,10 @@ jobs:
         run: zig env
 
       - name: Check Zig source code formatting
-        run: zig fmt --check src/**.zig build.zig
+        run: zig fmt --check src/**.zig build.zig build.zig.zon
 
-      - name: Build
+      - name: Build module
         run: zig build
 
-      - name: Run tests
+      - name: Run module tests
         run: zig build test

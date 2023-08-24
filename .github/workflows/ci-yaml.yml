@@ -14,17 +14,20 @@ on:
       - '.github/**.yml'
       - '.yamllint'
 
+permissions:
+  contents: read
+
 jobs:
-  lint:
+  check:
     runs-on:
       - ubuntu-22.04
 
     steps:
-      - name: Checkout
+      - name: Checkout last commit on branch main
         uses: actions/checkout@v3
 
       - name: Print yamllint version
         run: yamllint --version
 
       - name: Lint YAML files
-        run: yamllint --no-warnings .github/
+        run: yamllint --no-warnings .github/ .yamllint
