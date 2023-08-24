@@ -1,3 +1,6 @@
+// Copyright 2023 OK Ryoko
+// SPDX-License-Identifier: MIT
+
 const std = @import("std");
 const testing = std.testing;
 const expect = testing.expect;

@@ -1,3 +1,6 @@
+// Copyright 2022-2023 OK Ryoko
+// SPDX-License-Identifier: MIT
+
 /// Hierarchical, forwardly linked and circularly linked abstract data type
 ///
 /// At all times, assume that:
