@@ -6,8 +6,7 @@ const testing = std.testing;
 const expect = testing.expect;
 const expectEqual = testing.expectEqual;
 
-const multiring = @import("multiring.zig");
-const MultiRing = multiring.MultiRing;
+const MultiRing = @import("multiring").MultiRing;
 
 fn expectNull(actual: anytype) !void {
     switch (@typeInfo(@TypeOf(actual))) {

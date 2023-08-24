@@ -1,17 +1,16 @@
 const std = @import("std");
 
-pub fn build(b: *std.build.Builder) void {
-    const mode = b.standardReleaseOptions();
-    const target = b.standardTargetOptions(.{});
+pub fn build(b: *std.Build) void {
+    const module = b.addModule("multiring", .{
+        .source_file = .{ .path = "src/multiring.zig" },
+    });
 
-    const lib = b.addStaticLibrary("multiring", "src/multiring.zig");
-    lib.setBuildMode(mode);
-    lib.setTarget(target);
-    lib.install();
+    const tests = b.addTest(.{
+        .root_source_file = .{ .path = "src/multiring_test.zig" },
+    });
+    tests.addModule("multiring", module);
 
-    const tests = b.addTest("src/multiring_test.zig");
-    tests.setBuildMode(mode);
-
-    const test_step = b.step("test", "Run library tests");
-    test_step.dependOn(&tests.step);
+    const test_step = b.step("test", "Run module tests");
+    var run = b.addRunArtifact(tests);
+    test_step.dependOn(&run.step);
 }

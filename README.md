@@ -52,34 +52,48 @@ The counter-clockwise orientation of traversal in the animation above is arbitra
 - No arrays or memory management
 - No dependence on the Zig standard library
 
-## Importing multiring.zig
+## Adding multiring.zig to your project
 
-### Include the source code in your project
+> ℹ These instructions assume Zig v0.11.0.
 
-Begin by including the *multiring.zig* file in your Zig project. You may achieve this using [`git submodule`][Git submodules], e.g.,
-
-```console
-mkdir deps
-git submodule add https://github.com/ok-ryoko/multiring.zig deps/multiring.zig
-```
-
-However, this repository contains images, animations and developer documentation adding up to around 1 MB. You may want to avoid including all this content in a Git submodule given that the source code adds up to less than 100 kB.
-
-A space-conscious alternative is to clone this repository elsewhere and leverage an utility such as [rsync] to mirror only the *multiring.zig* file to your project’s repository. You’ll want to schedule this operation to take place each time you integrate new upstream changes into *multiring.zig*.
-
-### Update your build file
-
-Add the following line to your *build.zig* file at an appropriate location:
+In your project’s *build.zig.zon* file, add the following dependency:
 
 ```zig
-exe.addPackagePath("multiring", "path/to/multiring.zig");
+.{
+    .dependencies = .{
+        .multiring = .{
+            .url = "https://github.com/ok-ryoko/multiring.zig/archive/refs/heads/main.tar.gz",
+        },
+    },
+}
 ```
 
-… where `exe` is a `std.build.LibExeObjStep`. You should now be able to import multiring.zig like so:
+When you first run `zig build`, it will complain about a missing hash for the `multiring` dependency and echo the computed hash. You can use this value to populate the dependency’s `hash` field.
+
+Next, declare this module as a dependency in your *build.zig* file, e.g.,
 
 ```zig
-const multiring = @import("multiring");
-const MultiRing = multiring.MultiRing;
+const multiring = b.dependency("multiring", .{}).module("multiring");
+exe.addModule("multiring", multiring);
+```
+
+… where `exe` is a `*std.build.LibExeObjStep`. You should now be able to import the `MultiRing` ADT like so:
+
+```zig
+const MultiRing = @import("multiring").MultiRing;
+```
+
+This module has not yet had any versioned releases, so dependents that favor reproducibility should reference a particular commit on `main` as in the following example:
+
+```zig
+.{
+    .dependencies = .{
+        .multiring = .{
+            .url = "https://github.com/ok-ryoko/multiring.zig/archive/4d241318e1aa6cec7c0bb9b50dda4fae11720839.tar.gz",
+            .hash = "12202e4b8b3ea04e5397225ab2ee83a9e002946488b07da78b4da09f88519a7d459d",
+        },
+    },
+}
 ```
 
 ## Using multiring.zig
