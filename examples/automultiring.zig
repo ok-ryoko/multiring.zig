@@ -13,6 +13,7 @@ const MultiRingError = error{
     NoMoreRoom,
     NoSuchNode,
     OverwriteAttempt,
+    RingIsOpen,
 };
 
 /// Minimal example of an append-only, ring-level and data-centric interface to
@@ -276,6 +277,107 @@ pub fn AutoMultiRing(comptime T: type) type {
             }
         }
 
+        /// Return a copy of the data items in this multiring that satisfy the
+        /// given predicate.
+        ///
+        /// The subring of any data node that doesn't satisfy the predicate is
+        /// skipped.
+        ///
+        /// Assumes that the root node exists.
+        ///
+        /// Asserts that every ring is closed.
+        ///
+        pub fn filter(self: *Self, allocator: Allocator, predicate: *const fn (T) bool) ![]T {
+            if (self.isEmpty()) {
+                return &.{};
+            }
+
+            const root_ptr = switch (self.nodes.get(Node{ .head = self.root }).?) {
+                .head => |r| r,
+                .data => unreachable,
+            };
+
+            var result = ArrayListUnmanaged(T){};
+
+            var it = root_ptr.step();
+            while (it) |data_ptr| {
+                if (data_ptr.next == null) {
+                    return MultiRingError.RingIsOpen;
+                }
+
+                if (predicate(data_ptr.data)) {
+                    try result.append(allocator, data_ptr.data);
+                    it = data_ptr.stepZ();
+                    continue;
+                }
+
+                switch (data_ptr.next.?) {
+                    .head => |h| it = h.stepAbove(),
+                    .data => it = data_ptr.step(),
+                }
+            }
+
+            return result.toOwnedSlice(allocator);
+        }
+
+        /// Return the result of folding every data item in this multiring into
+        /// an accumulator using the given function.
+        ///
+        /// Assumes that the root node exists.
+        ///
+        /// Asserts that every ring is closed.
+        ///
+        pub fn fold(self: *Self, accumulator: T, func: *const fn (T, T) T) !T {
+            if (self.isEmpty()) {
+                return accumulator;
+            }
+
+            const root_ptr = switch (self.nodes.get(Node{ .head = self.root }).?) {
+                .head => |h| h,
+                .data => unreachable,
+            };
+
+            var result = accumulator;
+
+            var it = root_ptr.step();
+            while (it) |data_ptr| {
+                if (data_ptr.next == null) {
+                    return MultiRingError.RingIsOpen;
+                }
+                result = func(result, data_ptr.data);
+                it = data_ptr.stepZ();
+            }
+
+            return result;
+        }
+
+        /// Update this multiring in place by applying the given function to
+        /// every data item.
+        ///
+        /// Assumes that the root node exists.
+        ///
+        /// Asserts that every ring is closed.
+        ///
+        pub fn map(self: *Self, func: *const fn (T) T) !void {
+            if (self.isEmpty()) {
+                return;
+            }
+
+            const root_ptr = switch (self.nodes.get(Node{ .head = self.root }).?) {
+                .head => |h| h,
+                .data => unreachable,
+            };
+
+            var it = root_ptr.step();
+            while (it) |data_ptr| {
+                if (data_ptr.next == null) {
+                    return MultiRingError.RingIsOpen;
+                }
+                data_ptr.data = func(data_ptr.data);
+                it = data_ptr.stepZ();
+            }
+        }
+
         /// Return a copy of the data item stored in the node represented by
         /// `data_id`, asserting that the node is in this multiring.
         ///
@@ -353,9 +455,20 @@ test "empty multiring" {
 
     var it = try m.iteratorRing(m.root);
     try testing.expectEqual(@as(?M.DataNode, null), it.next());
+
+    {
+        const sum: u8 = 0;
+        try testing.expectEqual(sum, try m.fold(sum, add));
+    }
+
+    {
+        const empty = try m.filter(a, isEven);
+        defer a.free(empty);
+        try testing.expectEqual(@as(usize, 0), empty.len);
+    }
 }
 
-test "runtime multiring construction" {
+test "runtime multiring construction, filter and map" {
     const testing = std.testing;
     const a = testing.allocator;
 
@@ -397,4 +510,38 @@ test "runtime multiring construction" {
         var it = try m.iteratorRing(m.root);
         try testing.expectError(MultiRingError.OverwriteAttempt, m.createRing(it.next().?, null));
     }
+
+    {
+        const expected = [_]u8{ 0, 2, 0, 4, 0, 2 };
+        const actual = try m.filter(a, isEven);
+        defer a.free(actual);
+        try testing.expectEqualSlices(u8, &expected, actual);
+    }
+    try testing.expectEqual(@as(usize, 15), m.len());
+
+    {
+        var sum = try m.fold(@as(u8, 0), add);
+        try testing.expectEqual(@as(u8, 20), sum);
+    }
+    try testing.expectEqual(@as(usize, 15), m.len());
+
+    try m.map(double);
+    {
+        var sum: u8 = 0;
+        sum = try m.fold(sum, add);
+        try testing.expectEqual(@as(u8, 40), sum);
+    }
+    try testing.expectEqual(@as(usize, 15), m.len());
+}
+
+fn isEven(n: u8) bool {
+    return n % 2 == 0;
+}
+
+fn double(n: u8) u8 {
+    return 2 * n;
+}
+
+fn add(accumulator: u8, item: u8) u8 {
+    return accumulator + item;
 }
