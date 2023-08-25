@@ -395,7 +395,7 @@ pub fn AutoMultiRing(comptime T: type) type {
         /// Return an iterator over the data nodes in a ring, asserting that
         /// the ring is in this multiring.
         ///
-        pub fn iteratorRing(self: *Self, head_id: HeadNode) !RingIterator {
+        pub fn iterateRing(self: *Self, head_id: HeadNode) !RingIterator {
             if (!self.rings.contains(head_id)) {
                 return MultiRingError.NoSuchNode;
             }
@@ -453,7 +453,7 @@ test "empty multiring" {
     try testing.expectEqual(@as(usize, 0), try m.lenRing(m.root));
     try testing.expectError(MultiRingError.NoSuchNode, m.lenRing(1));
 
-    var it = try m.iteratorRing(m.root);
+    var it = try m.iterateRing(m.root);
     try testing.expectEqual(@as(?M.DataNode, null), it.next());
 
     {
@@ -488,7 +488,7 @@ test "runtime multiring construction, filter and map" {
         var ring_data = ArrayListUnmanaged(u8){};
         defer ring_data.deinit(a);
 
-        var it = try m.iteratorRing(m.root);
+        var it = try m.iterateRing(m.root);
         while (it.next()) |data_id| {
             const d = try m.getData(data_id);
 
@@ -507,7 +507,7 @@ test "runtime multiring construction, filter and map" {
     try testing.expectEqual(@as(usize, 15), m.len());
 
     {
-        var it = try m.iteratorRing(m.root);
+        var it = try m.iterateRing(m.root);
         try testing.expectError(MultiRingError.OverwriteAttempt, m.createRing(it.next().?, null));
     }
 
