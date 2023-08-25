@@ -35,7 +35,7 @@ readonly files
 
 # Check all Zig code and run the module tests
 #
-readonly zig_pattern='^src/.*\.zig$\|^build\.zig$\|^build\.zig\.zon$'
+readonly zig_pattern='^examples/.*\.zig$\|^src/.*\.zig$\|^build\.zig$\|^build\.zig\.zon$'
 zig_files="$(filter "${zig_pattern}" "${files}")"
 if [ -n "${zig_files}" ]; then
 	readonly zig_files
