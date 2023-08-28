@@ -47,10 +47,10 @@ The counter-clockwise orientation of traversal in the animation above is arbitra
 
 ## Properties of this module
 
-- Rich linked list-like interface
-- Recursion used sparingly
-- No arrays or memory management
-- No dependence on the Zig standard library
+- Linked list-like interface
+- No recursive method implementations
+- No dependencies
+- No memory management
 
 ## Adding multiring.zig to your project
 

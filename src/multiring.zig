@@ -173,24 +173,10 @@ pub fn MultiRing(comptime T: type) type {
             ///
             pub fn countBelow(this: *HeadNode) usize {
                 var result: usize = 0;
-                if (this.next) |first| {
+                var it = this.next;
+                while (it) |n| {
                     result += 1;
-                    if (first.next_below) |h| {
-                        result += h.countBelow();
-                    }
-                    var it = first.next;
-                    while (it) |n| {
-                        switch (n) {
-                            .head => break,
-                            .data => |d| {
-                                result += 1;
-                                if (d.next_below) |h| {
-                                    result += h.countBelow();
-                                }
-                                it = d.next;
-                            },
-                        }
-                    }
+                    it = n.stepUntilHeadZ(this);
                 }
                 return result;
             }
@@ -292,6 +278,31 @@ pub fn MultiRing(comptime T: type) type {
                         .data => |d| return d,
                     }
                 }
+                return null;
+            }
+
+            /// Return null if this is `head` or the root of a multiring; otherwise return either
+            /// the next data node in a superring of this ring before `head` or null if said data
+            /// node does not exist
+            ///
+            pub fn stepAboveUntilHead(this: *HeadNode, head: *HeadNode) ?*DataNode {
+                if (this == head) {
+                    return null;
+                }
+
+                var it = this;
+                while (it.next_above) |n| {
+                    switch (n) {
+                        .head => |h| {
+                            if (h == head) {
+                                break;
+                            }
+                            it = h;
+                        },
+                        .data => |d| return d,
+                    }
+                }
+
                 return null;
             }
 
@@ -457,29 +468,37 @@ pub fn MultiRing(comptime T: type) type {
                         return true;
                     }
 
-                    if (first.next_below) |h| {
-                        if (h.removeBelow(node)) {
-                            return true;
+                    var it: ?*DataNode = first;
+                    while (it) |n| {
+                        if (n == node) {
+                            if (n.findHead()) |h| {
+                                return h.remove(node);
+                            }
+                            return false;
                         }
-                    }
 
-                    var it = first;
-                    while (it.next) |n| {
-                        switch (n) {
-                            .head => break,
-                            .data => |d| {
-                                if (d == node) {
-                                    _ = it.popNext().?;
-                                    return true;
-                                }
-                                if (d.next_below) |h| {
-                                    if (h.removeBelow(node)) {
+                        if (n.next) |next| {
+                            switch (next) {
+                                .head => {},
+                                .data => |d| {
+                                    if (d == node) {
+                                        _ = n.popNext().?;
                                         return true;
                                     }
-                                }
-                                it = d;
-                            },
+                                },
+                            }
                         }
+
+                        if (n.next_below) |h| {
+                            if (h.next) |d| {
+                                if (d == node) {
+                                    _ = h.popNext().?;
+                                    return true;
+                                }
+                            }
+                        }
+
+                        it = n.stepUntilHeadZ(this);
                     }
                 }
                 return false;
@@ -630,6 +649,20 @@ pub fn MultiRing(comptime T: type) type {
                 } else null;
             }
 
+            /// If this is the last data node in an open ring or the last data node in this
+            /// multiring before `head`, then return null; otherwise return the next data node in
+            /// this multiring
+            ///
+            pub fn stepUntilHeadZ(this: *DataNode, head: *HeadNode) ?*DataNode {
+                if (this.stepBelow()) |d| {
+                    return d;
+                }
+                return if (this.next) |n| switch (n) {
+                    .head => |h| h.stepAboveUntilHead(head),
+                    .data => |d| d,
+                } else null;
+            }
+
             /// Insert a data node immediately after this data node; assume that `node` is not
             /// already in this multiring
             ///
@@ -701,27 +734,42 @@ pub fn MultiRing(comptime T: type) type {
             /// node was found and removed and false otherwise
             ///
             pub fn removeAfterZ(this: *DataNode, node: *DataNode) bool {
-                var it = this;
-                while (true) {
-                    if (it.next_below) |h| {
-                        if (h.removeBelow(node)) {
-                            return true;
+                if (this.next) |next| {
+                    var it = switch (next) {
+                        .head => |h| h.stepAbove(),
+                        .data => |d| d,
+                    };
+                    while (it) |n| {
+                        if (n == node) {
+                            if (n.findHead()) |h| {
+                                return h.remove(node);
+                            }
+                            return false;
                         }
-                    }
-                    if (it.next) |n| {
-                        switch (n) {
-                            .head => |h| return h.removeAbove(node),
-                            .data => |d| {
+
+                        if (n.next) |next_next| {
+                            switch (next_next) {
+                                .head => {},
+                                .data => |d| {
+                                    if (d == node) {
+                                        _ = n.popNext().?;
+                                        return true;
+                                    }
+                                },
+                            }
+                        }
+
+                        if (n.next_below) |h| {
+                            if (h.next) |d| {
                                 if (d == node) {
-                                    _ = it.popNext().?;
+                                    _ = h.popNext().?;
                                     return true;
                                 }
-                                it = d;
-                                continue;
-                            },
+                            }
                         }
+
+                        it = n.stepZ();
                     }
-                    break;
                 }
                 return false;
             }
