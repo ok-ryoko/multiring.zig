@@ -1,4 +1,11 @@
 .{
     .name = "multiring.zig",
     .version = "0.0.0",
+    .paths = .{
+        "LICENSE.txt",
+        "README.md",
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
 }

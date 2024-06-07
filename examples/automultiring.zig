@@ -61,7 +61,7 @@ pub fn AutoMultiRing(comptime T: type) type {
         pub fn init(allocator: Allocator) !Self {
             const root_id = 0;
 
-            var root_ptr = try allocator.create(M.HeadNode);
+            const root_ptr = try allocator.create(M.HeadNode);
             errdefer allocator.destroy(root_ptr);
             root_ptr.* = M.HeadNode{};
 
@@ -161,7 +161,7 @@ pub fn AutoMultiRing(comptime T: type) type {
                 return MultiRingError.NoMoreRoom;
             }
 
-            var head_ptr = try self.alloc.create(M.HeadNode);
+            const head_ptr = try self.alloc.create(M.HeadNode);
             errdefer self.alloc.destroy(head_ptr);
             head_ptr.* = M.HeadNode{};
 
@@ -259,7 +259,7 @@ pub fn AutoMultiRing(comptime T: type) type {
             }
 
             for (items) |item| {
-                var data_ptr = try self.alloc.create(M.DataNode);
+                const data_ptr = try self.alloc.create(M.DataNode);
                 errdefer self.alloc.destroy(data_ptr);
                 data_ptr.* = M.DataNode{ .data = item };
 
@@ -520,7 +520,7 @@ test "runtime multiring construction, filter and map" {
     try testing.expectEqual(@as(usize, 15), m.len());
 
     {
-        var sum = try m.fold(@as(u8, 0), add);
+        const sum = try m.fold(@as(u8, 0), add);
         try testing.expectEqual(@as(u8, 20), sum);
     }
     try testing.expectEqual(@as(usize, 15), m.len());

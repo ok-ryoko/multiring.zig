@@ -63,7 +63,7 @@ See also: [Tracking and closing issues](#tracking-and-closing-issues)
 To work on multiring.zig, you’ll need some or all of following software:
 
 - [Git] 2.9 or newer
-- [Zig] 0.11.0, for work on the multiring data structure
+- [Zig] 0.13.0, for work on the multiring data structure
 - [ShellCheck] 0.8, for [Git hook][githooks] development
 - [yamllint] 1.31, for [GitHub issue forms][syntax for issue forms] and [GitHub Actions workflows]
 

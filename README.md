@@ -54,7 +54,7 @@ The counter-clockwise orientation of traversal in the animation above is arbitra
 
 ## Adding multiring.zig to your project
 
-> ℹ These instructions assume Zig v0.11.0.
+> ℹ These instructions assume Zig v0.13.0.
 
 In your project’s *build.zig.zon* file, add the following dependency:
 
@@ -73,11 +73,19 @@ When you first run `zig build`, it will complain about a missing hash for the `m
 Next, declare this module as a dependency in your *build.zig* file, e.g.,
 
 ```zig
-const multiring = b.dependency("multiring", .{}).module("multiring");
-exe.addModule("multiring", multiring);
+const multiring = b.dependency(
+    "multiring",
+    .{ .target = target, .optimize = optimize },
+);
 ```
 
-… where `exe` is a `*std.build.LibExeObjStep`. You should now be able to import the `MultiRing` ADT like so:
+Finally, add the module to your target, e.g.,
+
+```zig
+exe.root_module.addImport("multiring", multiring.module("multiring"));
+```
+
+… where `exe` in this example is a `*std.Build.Step.Compile` that represents an executable to be compiled. You should now be able to import the `MultiRing` ADT like so:
 
 ```zig
 const MultiRing = @import("multiring").MultiRing;

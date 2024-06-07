@@ -349,7 +349,7 @@ pub fn MultiRing(comptime T: type) type {
                         switch (n) {
                             .head => {},
                             .data => {
-                                var d = this.popNext().?;
+                                const d = this.popNext().?;
                                 last.insertAfter(d);
                             },
                         }
