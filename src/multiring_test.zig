@@ -1,4 +1,4 @@
-// Copyright 2023 OK Ryoko
+// SPDX-FileCopyrightText: Copyright 2023 OK Ryoko
 // SPDX-License-Identifier: MIT
 
 const std = @import("std");

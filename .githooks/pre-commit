@@ -1,6 +1,6 @@
 #!/bin/sh -
 #
-# Copyright 2022-2023 OK Ryoko
+# SPDX-FileCopyrightText: Copyright 2022, 2023 OK Ryoko
 # SPDX-License-Identifier: MIT
 
 set -o errexit
