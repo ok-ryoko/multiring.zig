@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Checkout last commit on branch main
-        uses: actions/checkout@v3
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
 
       - name: Print yamllint version
         run: yamllint --version
