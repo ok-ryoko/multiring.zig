@@ -151,6 +151,29 @@ test "non-empty ring" {
     try expectNull(d[0].step());
 }
 
+test "reverse a non-empty ring" {
+    const M = MultiRing(u8);
+
+    var h = M.HeadNode{};
+    var d = [_]M.DataNode{
+        .{ .data = 0 },
+        .{ .data = 1 },
+        .{ .data = 2 },
+        .{ .data = 3 },
+        .{ .data = 4 },
+    };
+    h.extend(&d);
+
+    h.reverse();
+    var it = h.step();
+    var i: usize = 5;
+    while (it) |_it| {
+        try expectEqual(i - 1, _it.data);
+        i -= 1;
+        it = _it.step();
+    }
+}
+
 test "non-empty open ring (linked list)" {
     const M = MultiRing(u8);
 

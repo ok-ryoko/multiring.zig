@@ -357,6 +357,18 @@ pub fn MultiRing(comptime T: type) type {
                 }
             }
 
+            /// Reverse the data nodes in this ring
+            ///
+            pub fn reverse(this: *HeadNode) void {
+                if (this.findLast()) |last| {
+                    var first = this.next.?;
+                    while (first != last) : (first = this.next.?) {
+                        _ = this.popNext().?;
+                        last.insertAfter(first);
+                    }
+                }
+            }
+
             /// Insert a data node immediately after this head node, closing this ring if it is
             /// empty; assume that `node` is not already in this multiring
             ///
