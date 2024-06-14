@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2022, 2023 OK Ryoko
+// SPDX-FileCopyrightText: Copyright 2022-2024 OK Ryoko
 // SPDX-License-Identifier: MIT
 
 /// Hierarchical, forwardly linked and circularly linked abstract data type
@@ -503,6 +503,18 @@ pub fn MultiRing(comptime T: type) type {
                 }
                 return false;
             }
+
+            /// Remove all data nodes from this ring
+            ///
+            pub fn clear(this: *HeadNode) void {
+                if (this.findLast()) |last| {
+                    last.next = null;
+                    if (last.next_below) |h| {
+                        h.next_above = null;
+                    }
+                    this.next = null;
+                }
+            }
         };
 
         /// A data node is an element of a ring and contains:
@@ -858,6 +870,14 @@ pub fn MultiRing(comptime T: type) type {
         ///
         pub fn remove(self: *Self, node: *DataNode) bool {
             return if (self.root) |r| r.removeBelow(node) else false;
+        }
+
+        /// Remove all data nodes from this multiring
+        ///
+        pub fn clear(self: *Self) void {
+            if (self.root) |r| {
+                r.clear();
+            }
         }
     };
 }

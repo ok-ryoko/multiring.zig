@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2023 OK Ryoko
+// SPDX-FileCopyrightText: Copyright 2023, 2024 OK Ryoko
 // SPDX-License-Identifier: MIT
 
 const std = @import("std");
@@ -144,6 +144,11 @@ test "non-empty ring" {
 
     try expectEqual(&d[1], h.stepZ().?);
     try expectEqual(&d[0], h.findLastBelow().?);
+
+    h.clear();
+
+    try expect(h.isEmpty());
+    try expectNull(d[0].step());
 }
 
 test "non-empty open ring (linked list)" {
@@ -390,4 +395,7 @@ test "multiring comprising exactly one ring" {
     try expect(!m.isEmpty());
     try expectEqual(@as(usize, 5), m.len());
     try expectEqual(&d[4], m.findLast().?);
+
+    m.clear();
+    try expect(m.isEmpty());
 }
