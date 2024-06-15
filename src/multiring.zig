@@ -3,24 +3,18 @@
 
 /// Hierarchical, forwardly linked and circularly linked abstract data type
 ///
-/// At all times, assume that:
-///
-///   - no node in a multiring points to itself
-///   - every node in a multiring represents a unique location in memory
-///   - there are no more than two nodes in a multiring pointing to any node in the multiring
-///
 pub fn MultiRing(comptime T: type) type {
     return struct {
         const Self = @This();
 
-        /// A node is either a head node or data node
+        /// Types of node
         ///
         pub const NodeTag = enum {
             head,
             data,
         };
 
-        /// Node is a pointer to either a head node or data node
+        /// Either a pointer to a head node or a pointer to a data node
         ///
         pub const Node = union(NodeTag) {
             head: *HeadNode,
@@ -38,8 +32,9 @@ pub fn MultiRing(comptime T: type) type {
                 return self == .data;
             }
 
-            /// Return the last data node in this ring; if this is a head node and this ring is
-            /// empty, then return null
+            /// Return the last data node in this ring
+            ///
+            /// If this node is a head node and this ring is empty, then return null
             ///
             pub fn findLast(self: Node) ?*DataNode {
                 return switch (self) {
@@ -58,14 +53,18 @@ pub fn MultiRing(comptime T: type) type {
 
             /// Return the root of this multiring
             ///
+            /// If this node is a data node in an open ring or if any superring of the ring
+            /// containing this node is open, then return null
+            ///
             pub fn findRoot(self: Node) ?*HeadNode {
                 return switch (self) {
                     inline else => |s| s.findRoot(),
                 };
             }
 
-            /// Return the next data node in this ring; if this ring is empty or this is the last
-            /// data node in this ring, then return null
+            /// Return the next data node in this ring
+            ///
+            /// If this ring is empty or this is the last data node in this ring, then return null
             ///
             pub fn step(self: Node) ?*DataNode {
                 return switch (self) {
@@ -73,11 +72,15 @@ pub fn MultiRing(comptime T: type) type {
                 };
             }
 
-            /// Return the next data node in this multiring; return null if this is...
+            /// Return the next data node in this multiring
             ///
-            ///   - ... the root of an empty multiring
-            ///   - ... the last data node in a multiring
-            ///   - ... any head node after the last data node in a multiring
+            /// If this node is:
+            ///
+            ///   - the root of an empty multiring;
+            ///   - the last data node in this multiring, or
+            ///   - any head node after the last data node in this multiring...
+            ///
+            /// ... then return null
             ///
             pub fn stepZ(self: Node) ?*DataNode {
                 return switch (self) {
@@ -85,8 +88,9 @@ pub fn MultiRing(comptime T: type) type {
                 };
             }
 
-            /// Insert a data node immediately after this node, closing this ring if it is empty;
-            /// assume that `node` is not already in this multiring
+            /// Insert a data node immediately after this node
+            ///
+            /// Closes this ring if it is empty
             ///
             pub fn insertAfter(self: Node, node: *DataNode) void {
                 switch (self) {
@@ -94,8 +98,9 @@ pub fn MultiRing(comptime T: type) type {
                 }
             }
 
-            /// Insert many data nodes immediately after this node, closing this ring if it is
-            /// empty; assume that none of `nodes` is already in this multiring
+            /// Insert many data nodes immediately after this node
+            ///
+            /// Closes this ring if it is empty
             ///
             pub fn insertManyAfter(self: Node, nodes: []DataNode) void {
                 switch (self) {
@@ -103,8 +108,9 @@ pub fn MultiRing(comptime T: type) type {
                 }
             }
 
-            /// Remove and return the next data node in this ring; if this ring is empty or this is
-            /// the last data node in this ring, then return null
+            /// Remove and return the next data node in this ring
+            ///
+            /// If this ring is empty or this is the last data node in this ring, then return null
             ///
             pub fn popNext(self: Node) ?*DataNode {
                 return switch (self) {
@@ -113,21 +119,27 @@ pub fn MultiRing(comptime T: type) type {
             }
         };
 
-        /// A head node is the first node of a ring and contains:
+        /// The first and defining node of a ring, containing:
         ///
-        ///   - an optional link to the first data node in the ring (`next`)
+        ///   - an optional link to the first data node in the ring (`next`), and
         ///   - an optional link to the next node in this ring's superring (`next_above`)
         ///
-        /// Given a head node `h`, we say that:
+        /// For any head node `h`, always assume that:
         ///
-        ///   - the ring defined by h is empty when `h.next` is null
-        ///   - h is the root of a multiring when `h.next_above` is null
+        ///   - if the expression `h.next_above == .head` is equal to `true`, then the expression
+        ///     `h.next_above.? != h` is equal to `true`
+        ///
+        /// For any pair of distinct head nodes `h1` and `h2` in a multiring, always assume that the
+        /// following expressions are equal to `true`:
+        ///
+        ///     `h1.next.? != h2.next.?`
+        ///     `h1.next_above != h2.next_above`
         ///
         pub const HeadNode = struct {
             next: ?*DataNode = null,
             next_above: ?Node = null,
 
-            /// Determine whether this head node is the root of a multiring
+            /// Determine whether this head node is the root of this multiring
             ///
             pub fn isRoot(this: *HeadNode) bool {
                 return this.next_above == null;
@@ -139,8 +151,10 @@ pub fn MultiRing(comptime T: type) type {
                 return this.next == null;
             }
 
-            /// If this ring is empty, then return null; otherwise determine whether this ring
-            /// comprises a null-terminated sequence of data nodes
+            /// Determine whether this ring comprises a null-terminated sequence of data nodes,
+            /// i.e., a conventional linked list
+            ///
+            /// If this ring is empty, then return null
             ///
             pub fn isOpen(this: *HeadNode) ?bool {
                 return if (this.next) |first| first.findHead() == null else null;
@@ -181,15 +195,17 @@ pub fn MultiRing(comptime T: type) type {
                 return result;
             }
 
-            /// If this ring is empty, then return null; otherwise return the last data node in
-            /// this ring
+            /// Return the last data node in this ring
+            ///
+            /// If this ring is empty, then return null
             ///
             pub fn findLast(this: *HeadNode) ?*DataNode {
                 return if (this.next) |first| first.findLast() else null;
             }
 
-            /// Return the last data node in this multiring after this ring if there is one and
-            /// otherwise null
+            /// Return the last data node after this ring in this multiring
+            ///
+            /// If there is no such data node, then return null
             ///
             pub fn findLastAbove(this: *HeadNode) ?*DataNode {
                 var result: ?*DataNode = null;
@@ -206,8 +222,9 @@ pub fn MultiRing(comptime T: type) type {
                 return result;
             }
 
-            /// If this ring is empty, then return null; otherwise return the last data node in the
-            /// multiring rooted at this head node
+            /// Return the last data node in the multiring rooted at this head node
+            ///
+            /// If this ring is empty, then return null
             ///
             pub fn findLastBelow(this: *HeadNode) ?*DataNode {
                 var result: ?*DataNode = null;
@@ -220,8 +237,9 @@ pub fn MultiRing(comptime T: type) type {
                 return result;
             }
 
-            /// If this head node is the root of a multiring, then return null; otherwise return
-            /// the first head node above this head node
+            /// Return the next head node in this multiring after this ring
+            ///
+            /// If this head node is the root of this multiring, then return null
             ///
             pub fn findHeadAbove(this: *HeadNode) ?*HeadNode {
                 return if (this.next_above) |n| switch (n) {
@@ -230,8 +248,17 @@ pub fn MultiRing(comptime T: type) type {
                 } else null;
             }
 
-            /// Return the next head node in this multiring after this node if it can be found and
-            /// null otherwise
+            /// Return the next head node in this multiring after this head node
+            ///
+            /// If this head node:
+            ///
+            ///   - is the last head node in the multiring;
+            ///   - is the root of an empty multiring;
+            ///   - defines an empty subring of an open superring, or
+            ///   - defines an open nonempty ring that contains no subrings...
+            ///
+            /// ... then return null
+            ///
             pub fn findHeadZ(this: *HeadNode) ?*HeadNode {
                 return if (this.next) |first| blk: {
                     break :blk first.findHeadZ();
@@ -240,7 +267,9 @@ pub fn MultiRing(comptime T: type) type {
                 } else this;
             }
 
-            /// Return the root of this multiring if it can be found and null otherwise
+            /// Return the root of this multiring
+            ///
+            /// If any superring of this ring is open, then return null
             ///
             pub fn findRoot(this: *HeadNode) ?*HeadNode {
                 var it = this;
@@ -259,16 +288,22 @@ pub fn MultiRing(comptime T: type) type {
                 return it;
             }
 
-            /// If this ring is empty, then return null; otherwise return the first data node in
-            /// this ring
+            /// Return the first data node in this ring
+            ///
+            /// If this ring is empty, then return null
             ///
             pub fn step(this: *HeadNode) ?*DataNode {
                 return if (this.next) |first| first else null;
             }
 
-            /// If this ring is empty or this head node is the root of a multiring, then return
-            /// null; otherwise return either the first next data node in a superring of this ring
-            /// if it exists or null
+            /// Return the next data node in a superring of this ring
+            ///
+            /// If:
+            ///
+            ///   - this head node is the root of this multiring, or
+            ///   - there are no data nodes after this ring in this multiring...
+            ///
+            /// ... then return null
             ///
             pub fn stepAbove(this: *HeadNode) ?*DataNode {
                 var it = this;
@@ -281,9 +316,15 @@ pub fn MultiRing(comptime T: type) type {
                 return null;
             }
 
-            /// Return null if this is `head` or the root of a multiring; otherwise return either
-            /// the next data node in a superring of this ring before `head` or null if said data
-            /// node does not exist
+            /// Return the next data node in a superring of this ring before `head`
+            ///
+            /// If:
+            ///
+            ///   - this head node is equal to `head`;
+            ///   - this head node is the root of this multiring, or
+            ///   - there are no data nodes after this ring in this multiring...
+            ///
+            /// ... then return null
             ///
             pub fn stepAboveUntilHead(this: *HeadNode, head: *HeadNode) ?*DataNode {
                 if (this == head) {
@@ -306,10 +347,14 @@ pub fn MultiRing(comptime T: type) type {
                 return null;
             }
 
-            /// If this head node is the root of an empty multiring, then return null; otherwise
-            /// return either the first data node in this ring if this ring is non-empty, or the
-            /// next data node in a superring of this ring if there are data nodes still left in
-            /// the sequence, or null
+            /// Return the next data node in this multiring
+            ///
+            /// If:
+            ///
+            ///   - this head node is the root of an empty multiring, or
+            ///   - there are no data nodes after this head node in this multiring...
+            ///
+            /// ... then return null
             ///
             pub fn stepZ(this: *HeadNode) ?*DataNode {
                 return if (this.next) |first| first else this.stepAbove();
@@ -369,16 +414,18 @@ pub fn MultiRing(comptime T: type) type {
                 }
             }
 
-            /// Insert a data node immediately after this head node, closing this ring if it is
-            /// empty; assume that `node` is not already in this multiring
+            /// Insert a data node immediately after this head node
+            ///
+            /// Closes this ring if it is empty
             ///
             pub fn insertAfter(this: *HeadNode, node: *DataNode) void {
                 node.next = if (this.next) |first| .{ .data = first } else .{ .head = this };
                 this.next = node;
             }
 
-            /// Insert many data nodes immediately after this head node, closing this ring if it is
-            /// empty; assume that none of `nodes` is already in this multiring
+            /// Insert many data nodes immediately after this head node
+            ///
+            /// Closes this ring if it is empty
             ///
             pub fn insertManyAfter(this: *HeadNode, nodes: []DataNode) void {
                 if (nodes.len > 0) {
@@ -391,9 +438,10 @@ pub fn MultiRing(comptime T: type) type {
                 }
             }
 
-            /// If this ring is empty, then append a data node to this head node and close this
-            /// ring; otherwise insert a data node immediately after this ring's last data node;
-            /// assume that `node` is not already in this multiring
+            /// Insert a data node immediately after the last data node in this ring
+            ///
+            /// If this ring is empty, then insert the data node immediately after this head node
+            /// and close this ring
             ///
             pub fn append(this: *HeadNode, node: *DataNode) void {
                 if (this.next) |first| {
@@ -404,9 +452,10 @@ pub fn MultiRing(comptime T: type) type {
                 }
             }
 
-            /// If this ring is empty, then append many data nodes to this head node and close this
-            /// ring; otherwise insert many data nodes immediately after this ring's last data node;
-            /// assume that none of `nodes` is already in this multiring
+            /// Insert many data nodes immediately after the last data node in this ring
+            ///
+            /// If this ring is empty, then insert the data nodes immediately after this head node
+            /// and close this ring
             ///
             pub fn extend(this: *HeadNode, nodes: []DataNode) void {
                 if (this.next) |first| {
@@ -417,7 +466,9 @@ pub fn MultiRing(comptime T: type) type {
                 }
             }
 
-            /// Remove and return the first data node in this ring or null if this ring is empty
+            /// Remove and return the first data node in this ring
+            ///
+            /// If this ring is empty, then return null
             ///
             pub fn popNext(this: *HeadNode) ?*DataNode {
                 if (this.next) |first| {
@@ -529,16 +580,22 @@ pub fn MultiRing(comptime T: type) type {
             }
         };
 
-        /// A data node is an element of a ring and contains:
+        /// An element of a ring, containing:
         ///
-        ///   - an optional link to the next node in the ring (`next`)
-        ///   - an optional link to the head node of another ring (a subring) (`next_below`)
+        ///   - an optional link to the next node in the ring (`next`);
+        ///   - an optional link to the head node of another ring (a subring) (`next_below`), and
         ///   - data of a compile time-known type (`data`)
         ///
-        /// At all times, assume that:
+        /// For any data node `d`, always assume that:
         ///
-        ///   - if the next node in this ring is a head node, then that head
-        ///     node is equal to the head node immediately upstream of this data node
+        ///   - if the expression `d.next == .head` is equal to `true`, then `d.next` is equal to a
+        ///     pointer to the head node defining the ring of which `d` is an element
+        ///
+        /// For any pair of distinct data nodes `d1` and `d2` in a multiring, always assume that the
+        /// following expressions are equal to `true`:
+        ///
+        ///     `d1.next.? != d2.next.?`
+        ///     `d1.next_below.? != d2.next_below.?`
         ///
         pub const DataNode = struct {
             next: ?Node = null,
@@ -596,8 +653,9 @@ pub fn MultiRing(comptime T: type) type {
                 return it;
             }
 
-            /// If this ring is open, then return null; otherwise return the head node of this
-            /// ring
+            /// Return the head node of this ring
+            ///
+            /// If this ring is open, then return null
             ///
             pub fn findHead(this: *DataNode) ?*HeadNode {
                 var it = this;
@@ -610,8 +668,10 @@ pub fn MultiRing(comptime T: type) type {
                 return null;
             }
 
-            /// Return the next head node in this multiring after this data node if it can be found
-            /// and null otherwise
+            /// Return the next head node in this multiring after this data node
+            ///
+            /// If this ring is open and neither this data node nor any of the remaining data nodes
+            /// has a subring, then return null
             ///
             pub fn findHeadZ(this: *DataNode) ?*HeadNode {
                 if (this.next_below) |h| {
@@ -632,14 +692,17 @@ pub fn MultiRing(comptime T: type) type {
                 return null;
             }
 
-            /// Return the root of this multiring if it can be found and null otherwise
+            /// Return the root of this multiring
+            ///
+            /// If this ring or any superring of this ring is open, then return null
             ///
             pub fn findRoot(this: *DataNode) ?*HeadNode {
                 return if (this.findHead()) |h| h.findRoot() else null;
             }
 
-            /// If this is the last data node in this ring, then return null; otherwise return the
-            /// next data node in this ring
+            /// Return the next data node in this ring
+            ///
+            /// If this data node is the last data node in this ring, then return null
             ///
             pub fn step(this: *DataNode) ?*DataNode {
                 return if (this.next) |n| switch (n) {
@@ -648,8 +711,9 @@ pub fn MultiRing(comptime T: type) type {
                 } else null;
             }
 
-            /// If there is no non-empty subring at this data node, then return null; otherwise
-            /// return the first data node in the subring
+            /// Return the first data node in the subring at this data node
+            ///
+            /// If there is no nonempty subring at this data node, then return null
             ///
             pub fn stepBelow(this: *DataNode) ?*DataNode {
                 if (this.next_below) |h| {
@@ -660,8 +724,10 @@ pub fn MultiRing(comptime T: type) type {
                 return null;
             }
 
-            /// If this is the last data node in an open ring or the last data node in this
-            /// multiring, then return null; otherwise return the next data node in this multiring
+            /// Return the next data node in this multiring
+            ///
+            /// If this data node is the last data node in an open ring or in this multiring, then
+            /// return null
             ///
             pub fn stepZ(this: *DataNode) ?*DataNode {
                 if (this.stepBelow()) |d| {
@@ -673,9 +739,10 @@ pub fn MultiRing(comptime T: type) type {
                 } else null;
             }
 
-            /// If this is the last data node in an open ring or the last data node in this
-            /// multiring before `head`, then return null; otherwise return the next data node in
-            /// this multiring
+            /// Return the next data node in this multiring before `head`
+            ///
+            /// If this data node is the last data node in an open ring or in this multiring, then
+            /// return null
             ///
             pub fn stepUntilHeadZ(this: *DataNode, head: *HeadNode) ?*DataNode {
                 if (this.stepBelow()) |d| {
@@ -687,8 +754,7 @@ pub fn MultiRing(comptime T: type) type {
                 } else null;
             }
 
-            /// Insert a data node immediately after this data node; assume that `node` is not
-            /// already in this multiring
+            /// Insert a data node immediately after this data node
             ///
             pub fn insertAfter(this: *DataNode, node: *DataNode) void {
                 node.next = this.next;
@@ -698,8 +764,7 @@ pub fn MultiRing(comptime T: type) type {
                 }
             }
 
-            /// Insert many data nodes imediately after this data node; assume that none of `nodes`
-            /// is already in this multiring
+            /// Insert many data nodes immediately after this data node
             ///
             pub fn insertManyAfter(this: *DataNode, nodes: []DataNode) void {
                 if (nodes.len > 0) {
@@ -711,8 +776,9 @@ pub fn MultiRing(comptime T: type) type {
                 }
             }
 
-            /// If this is the last data node in this ring, then return null; otherwise remove and
-            /// return the next data node in this ring
+            /// Remove and return the next data node in this ring
+            ///
+            /// If this data node is the last data node in this ring, then return null
             ///
             pub fn popNext(this: *DataNode) ?*DataNode {
                 if (this.next) |n| {
@@ -798,18 +864,16 @@ pub fn MultiRing(comptime T: type) type {
                 return false;
             }
 
-            /// Link a multiring to this data node; assume that:
-            ///
-            ///   - there is not already a multiring attached to `this`, and
-            ///   - `head` is not already in this multiring
+            /// Link a multiring to this data node
             ///
             pub fn attachMultiRing(this: *DataNode, head: *HeadNode) void {
                 this.next_below = head;
                 head.next_above = this.next;
             }
 
-            /// Remove and return the multiring linked to this data node or null if there is no
-            /// such multiring
+            /// Remove and return the multiring below this data node
+            ///
+            /// Return null if there is no such multiring
             ///
             pub fn detachMultiRing(node: *DataNode) ?*HeadNode {
                 return if (node.next_below) |h| blk: {
@@ -820,8 +884,9 @@ pub fn MultiRing(comptime T: type) type {
             }
         };
 
-        /// At all times, assume that `root` is the unique head node in this multiring with
-        /// `root.next_above` equal to null
+        /// The unique head node in this multiring
+        ///
+        /// Always assume that the expression `root.next_above == null` is equal to `true`
         ///
         root: ?*HeadNode = null,
 
@@ -843,16 +908,19 @@ pub fn MultiRing(comptime T: type) type {
             return result;
         }
 
-        /// If this multiring is empty or rootless, then return null; otherwise return the last
-        /// data node in this multiring
+        /// Return the last data node in this multiring
+        ///
+        /// If this multiring is empty or rootless, then return null
         ///
         pub fn findLast(self: *Self) ?*DataNode {
             return if (self.root) |r| r.findLastBelow() else null;
         }
 
-        /// If this multiring is rootless, then do nothing; otherwise insert a data node
-        /// immediately after either the root node, if this multiring is empty, or the last data
-        /// node in this multiring; assume that `node` is not already in this multiring
+        /// Insert a data node immediately after the last data node in this multiring
+        ///
+        /// If this multiring is empty, then insert the data node immediately after the root
+        ///
+        /// If this multiring is rootless, then do nothing
         ///
         pub fn append(self: *Self, node: *DataNode) void {
             if (self.findLast()) |l| {
@@ -862,10 +930,11 @@ pub fn MultiRing(comptime T: type) type {
             }
         }
 
-        /// If no data nodes are passed or this multiring is rootless, then do nothing; otherwise
-        /// insert many data nodes immediately after either the root node, if this multiring is
-        /// empty, or the last data node in this multiring; assume that none of `nodes` is already
-        /// in this multiring
+        /// Insert many data nodes immediately after the last data node in this multiring
+        ///
+        /// If this multiring is empty, then insert the data nodes immediately after the root
+        ///
+        /// If this multiring is rootless, then do nothing
         ///
         pub fn extend(self: *Self, nodes: []DataNode) void {
             if (self.root) |r| {

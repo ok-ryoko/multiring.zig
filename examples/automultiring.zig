@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2023 OK Ryoko
+// SPDX-FileCopyrightText: Copyright 2023, 2024 OK Ryoko
 // SPDX-License-Identifier: MIT
 
 const std = @import("std");
@@ -16,13 +16,14 @@ const MultiRingError = error{
     RingIsOpen,
 };
 
-/// Minimal example of an append-only, ring-level and data-centric interface to
-/// the `MultiRing` type with automatic memory management.
+/// Minimal example of an append-only, ring-level and data-centric interface to a `MultiRing(T)`
+/// with automatic memory management
 ///
-/// Operations that would produce undefined behavior in the underlying
-/// multiring return a `MultiRingError` instead.
+/// Keeps all rings closed
 ///
-/// All rings are kept closed and there are no free rings.
+/// Mitigates the existence of free (dangling) rings
+///
+/// Guards against undefined behavior in the underlying multiring's operations by returning an error
 ///
 pub fn AutoMultiRing(comptime T: type) type {
     return struct {
@@ -44,19 +45,23 @@ pub fn AutoMultiRing(comptime T: type) type {
         inner: M = undefined,
         key: Id = 0,
 
-        // Storage for all nodes. The active tag in each key must be equal to
-        // the active tag in the corresponding value.
+        // Storage for all nodes
+        //
+        // Always assume that the active tag in every key is equal to the active tag in the
+        // associated value
         //
         nodes: Nodes = undefined,
 
-        // Map from head nodes to data nodes. Every key must have a
-        // corresponding key in `nodes` with tag `.head`.
+        // Map from head nodes to data nodes
+        //
+        // Always assume that every key corresponds to exactly one key in `Self.nodes` with active
+        // tag equal to `.head`
         //
         rings: Rings = undefined,
 
         alloc: Allocator = undefined,
 
-        /// Initialize an AutoMultiRing containing an empty root ring.
+        /// Initialize a multiring containing an empty root ring
         ///
         pub fn init(allocator: Allocator) !Self {
             const root_id = 0;
@@ -85,7 +90,7 @@ pub fn AutoMultiRing(comptime T: type) type {
             };
         }
 
-        /// Release all memory allocated for this multiring.
+        /// Release all memory allocated for this multiring
         ///
         pub fn deinit(self: *Self) void {
             {
@@ -109,14 +114,15 @@ pub fn AutoMultiRing(comptime T: type) type {
             self.* = undefined;
         }
 
-        /// Determine whether this multiring is empty.
+        /// Determine whether this multiring is empty
         ///
         pub fn isEmpty(self: *Self) bool {
             return self.inner.isEmpty();
         }
 
-        /// Determine whether a ring is empty, asserting that the ring is in
-        /// this multiring.
+        /// Determine whether a ring is empty
+        ///
+        /// Asserts that the ring is in this multiring
         ///
         pub fn isRingEmpty(self: *Self, head_id: HeadNode) !bool {
             if (!self.rings.contains(head_id)) {
@@ -125,7 +131,7 @@ pub fn AutoMultiRing(comptime T: type) type {
             return self.rings.getPtr(head_id).?.items.len == 0;
         }
 
-        /// Return the number of data nodes in this multiring.
+        /// Return the number of data nodes in this multiring
         ///
         pub fn len(self: *Self) usize {
             var it = self.rings.valueIterator();
@@ -136,8 +142,9 @@ pub fn AutoMultiRing(comptime T: type) type {
             return count;
         }
 
-        /// Return the number of data nodes in a ring, asserting that the ring
-        /// is in this multiring.
+        /// Return the number of data nodes in a ring
+        ///
+        /// Asserts that the ring is in this multiring
         ///
         pub fn lenRing(self: *Self, head_id: HeadNode) !usize {
             if (!self.rings.contains(head_id)) {
@@ -146,11 +153,13 @@ pub fn AutoMultiRing(comptime T: type) type {
             return self.rings.getPtr(head_id).?.items.len;
         }
 
-        /// Create a ring from zero or more data items and link it to the data
-        /// node represented by `data_id`, asserting that:
+        /// Create a ring from zero or more data items and link it to the data node represented by
+        /// `data_id`
         ///
-        /// - there is sufficient storage in this multiring, and
-        /// - there isn't already a ring linked to the data node.
+        /// Asserts that:
+        ///
+        ///   - there is sufficient storage in this multiring, and
+        ///   - there isn't already a ring linked to the data node
         ///
         fn createRing(self: *Self, data_id: DataNode, items: ?[]const T) !HeadNode {
             if (self.key + 1 >= math.maxInt(Id)) {
@@ -184,12 +193,13 @@ pub fn AutoMultiRing(comptime T: type) type {
             return head_id;
         }
 
-        /// Link (the head node of) a ring to a data node in this multiring,
-        /// asserting that:
+        /// Link a (multi)ring to a data node in this multiring
         ///
-        /// - `head_id` represents a free ring and
-        /// - `data_id` represents a data node that is in this multiring and to
-        ///   which no ring is already linked.
+        /// Asserts that:
+        ///
+        ///   - `head_id` represents a free ring, and
+        ///   - `data_id` represents a data node that is in this multiring and to
+        ///     which no ring is already linked
         ///
         fn attachRing(self: *Self, head_id: HeadNode, data_id: DataNode) !void {
             const head_node = Node{ .head = head_id };
@@ -219,14 +229,14 @@ pub fn AutoMultiRing(comptime T: type) type {
             data_ptr.attachMultiRing(head_ptr);
         }
 
-        /// Extend a ring with one or more data items, asserting that:
+        /// Extend a ring with one or more data items
         ///
-        /// - the ring is in this multiring,
-        /// - there is at least one data item to append to the ring, and
-        /// - there is sufficient storage in this multiring.
+        /// Asserts that:
         ///
-        /// Assumes that `self.rings` is in sync with `self.nodes`. Invalidates
-        /// all iterators into the ring.
+        ///   - the ring is in this multiring, and
+        ///   - there is sufficient storage in this multiring
+        ///
+        /// Invalidates all iterators into the ring
         ///
         pub fn extendRing(self: *Self, head_id: HeadNode, items: []const T) !void {
             if (!self.nodes.contains(Node{ .head = head_id })) {
@@ -277,15 +287,12 @@ pub fn AutoMultiRing(comptime T: type) type {
             }
         }
 
-        /// Return a copy of the data items in this multiring that satisfy the
-        /// given predicate.
+        /// Return a copy of the data items in this multiring that satisfy the predicate, skipping
+        /// all data items below every noncompliant data node
         ///
-        /// The subring of any data node that doesn't satisfy the predicate is
-        /// skipped.
+        /// Assumes that the root node exists
         ///
-        /// Assumes that the root node exists.
-        ///
-        /// Asserts that every ring is closed.
+        /// Asserts that every ring is closed
         ///
         pub fn filter(self: *Self, allocator: Allocator, predicate: *const fn (T) bool) ![]T {
             if (self.isEmpty()) {
@@ -320,12 +327,12 @@ pub fn AutoMultiRing(comptime T: type) type {
             return result.toOwnedSlice(allocator);
         }
 
-        /// Return the result of folding every data item in this multiring into
-        /// an accumulator using the given function.
+        /// Return the result of folding every data item in this multiring into an accumulator using
+        /// the given function
         ///
-        /// Assumes that the root node exists.
+        /// Assumes that the root node exists
         ///
-        /// Asserts that every ring is closed.
+        /// Asserts that every ring is closed
         ///
         pub fn fold(self: *Self, accumulator: T, func: *const fn (T, T) T) !T {
             if (self.isEmpty()) {
@@ -351,12 +358,11 @@ pub fn AutoMultiRing(comptime T: type) type {
             return result;
         }
 
-        /// Update this multiring in place by applying the given function to
-        /// every data item.
+        /// Update this multiring in place by applying the given function to every data item
         ///
-        /// Assumes that the root node exists.
+        /// Assumes that the root node exists
         ///
-        /// Asserts that every ring is closed.
+        /// Asserts that every ring is closed
         ///
         pub fn map(self: *Self, func: *const fn (T) T) !void {
             if (self.isEmpty()) {
@@ -378,8 +384,9 @@ pub fn AutoMultiRing(comptime T: type) type {
             }
         }
 
-        /// Return a copy of the data item stored in the node represented by
-        /// `data_id`, asserting that the node is in this multiring.
+        /// Return a copy of the data item stored in the data node represented by `data_id`
+        ///
+        /// Asserts that the data node is in this multiring
         ///
         pub fn getData(self: *Self, data_id: DataNode) !T {
             const data_node = Node{ .data = data_id };
@@ -392,8 +399,9 @@ pub fn AutoMultiRing(comptime T: type) type {
             };
         }
 
-        /// Return an iterator over the data nodes in a ring, asserting that
-        /// the ring is in this multiring.
+        /// Return an iterator over the data nodes in a ring
+        ///
+        /// Asserts that the ring is in this multiring
         ///
         pub fn iterateRing(self: *Self, head_id: HeadNode) !RingIterator {
             if (!self.rings.contains(head_id)) {
@@ -410,10 +418,16 @@ pub fn AutoMultiRing(comptime T: type) type {
             };
         }
 
+        /// Iterator over the data nodes in a ring
+        ///
         pub const RingIterator = struct {
             items: []DataNode,
             count: usize,
 
+            /// Return the next data node in the ring
+            ///
+            /// If the last data node in the ring has already been returned, then return null
+            ///
             pub fn next(self: *RingIterator) ?DataNode {
                 if (self.count > 0) {
                     const node = self.items[self.items.len - self.count];
@@ -424,8 +438,9 @@ pub fn AutoMultiRing(comptime T: type) type {
             }
         };
 
-        /// Increment the storage key, asserting that the operation will not
-        /// result in integer overflow.
+        /// Increment the storage key
+        ///
+        /// Asserts that the operation will not result in integer overflow
         ///
         fn incrementGetKey(self: *Self) !Id {
             if (self.key == math.maxInt(Id)) {
