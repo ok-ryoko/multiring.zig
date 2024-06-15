@@ -161,7 +161,7 @@ pub fn AutoMultiRing(comptime T: type) type {
         ///   - there is sufficient storage in this multiring, and
         ///   - there isn't already a ring linked to the data node
         ///
-        fn createRing(self: *Self, data_id: DataNode, items: ?[]const T) !HeadNode {
+        pub fn createRing(self: *Self, data_id: DataNode, items: ?[]const T) !HeadNode {
             if (self.key + 1 >= math.maxInt(Id)) {
                 return MultiRingError.NoMoreRoom;
             }
