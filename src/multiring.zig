@@ -330,7 +330,6 @@ pub fn MultiRing(comptime T: type) type {
                 if (this == head) {
                     return null;
                 }
-
                 var it = this;
                 while (it.next_above) |n| {
                     switch (n) {
@@ -343,7 +342,6 @@ pub fn MultiRing(comptime T: type) type {
                         .data => |d| return d,
                     }
                 }
-
                 return null;
             }
 
@@ -530,7 +528,6 @@ pub fn MultiRing(comptime T: type) type {
                         _ = this.popNext().?;
                         return true;
                     }
-
                     var it: ?*DataNode = first;
                     while (it) |n| {
                         if (n == node) {
@@ -539,7 +536,6 @@ pub fn MultiRing(comptime T: type) type {
                             }
                             return false;
                         }
-
                         if (n.next) |next| {
                             switch (next) {
                                 .head => {},
@@ -551,7 +547,6 @@ pub fn MultiRing(comptime T: type) type {
                                 },
                             }
                         }
-
                         if (n.next_below) |h| {
                             if (h.next) |d| {
                                 if (d == node) {
@@ -560,7 +555,6 @@ pub fn MultiRing(comptime T: type) type {
                                 }
                             }
                         }
-
                         it = n.stepUntilHeadZ(this);
                     }
                 }
@@ -836,7 +830,6 @@ pub fn MultiRing(comptime T: type) type {
                             }
                             return false;
                         }
-
                         if (n.next) |next_next| {
                             switch (next_next) {
                                 .head => {},
@@ -848,7 +841,6 @@ pub fn MultiRing(comptime T: type) type {
                                 },
                             }
                         }
-
                         if (n.next_below) |h| {
                             if (h.next) |d| {
                                 if (d == node) {
@@ -857,7 +849,6 @@ pub fn MultiRing(comptime T: type) type {
                                 }
                             }
                         }
-
                         it = n.stepZ();
                     }
                 }
