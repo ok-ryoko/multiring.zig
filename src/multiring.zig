@@ -361,8 +361,7 @@ pub fn MultiRing(comptime T: type) type {
             /// Unlink the last data node in this ring from this head node
             ///
             pub fn open(this: *HeadNode) void {
-                if (this.next) |first| {
-                    const last = first.findLast();
+                if (this.findLast()) |last| {
                     last.next = null;
                     if (last.next_below) |h| {
                         h.next_above = null;
@@ -373,8 +372,7 @@ pub fn MultiRing(comptime T: type) type {
             /// Link the last data node in this ring to this head node
             ///
             pub fn close(this: *HeadNode) void {
-                if (this.next) |first| {
-                    const last = first.findLast();
+                if (this.findLast()) |last| {
                     last.next = .{ .head = this };
                     if (last.next_below) |h| {
                         h.next_above = .{ .head = this };
@@ -442,8 +440,7 @@ pub fn MultiRing(comptime T: type) type {
             /// and close this ring
             ///
             pub fn append(this: *HeadNode, node: *DataNode) void {
-                if (this.next) |first| {
-                    const last = first.findLast();
+                if (this.findLast()) |last| {
                     last.insertAfter(node);
                 } else {
                     this.insertAfter(node);
@@ -456,8 +453,7 @@ pub fn MultiRing(comptime T: type) type {
             /// and close this ring
             ///
             pub fn extend(this: *HeadNode, nodes: []DataNode) void {
-                if (this.next) |first| {
-                    const last = first.findLast();
+                if (this.findLast()) |last| {
                     last.insertManyAfter(nodes);
                 } else {
                     this.insertManyAfter(nodes);
