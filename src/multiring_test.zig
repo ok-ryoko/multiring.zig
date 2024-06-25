@@ -45,7 +45,7 @@ test "empty ring" {
     try expectNull(h.findLastAbove());
     try expectNull(h.findLastBelow());
     try expectNull(h.findHeadAbove());
-    try expectEqual(&h, h.findHeadZ().?);
+    try expectNull(h.findHeadZ());
     try expectEqual(&h, h.findRoot().?);
     try expectNull(h.step());
     try expectNull(h.stepAbove());
@@ -81,7 +81,7 @@ test "non-empty ring" {
     try expectEqual(&d[0], h.findLastBelow().?);
     try expectNull(h.findLastAbove());
     try expectNull(h.findHeadAbove());
-    try expectEqual(&h, h.findHeadZ().?);
+    try expectNull(h.findHeadZ());
     try expectEqual(&h, h.findRoot().?);
     try expectEqual(&d[0], h.step().?);
     try expectNull(h.stepAbove());
@@ -312,7 +312,7 @@ test "non-empty ring containing subrings" {
 
     try expectNull(h3.findLastAbove());
     try expectEqual(&h0, h3.findHeadAbove().?);
-    try expectEqual(&h3, h3.findHeadZ().?);
+    try expectNull(h3.findHeadZ());
     try expectEqual(&h0, h3.findRoot().?);
     try expectNull(h3.stepAbove());
     try expectEqual(&d3, h3.stepZ().?);

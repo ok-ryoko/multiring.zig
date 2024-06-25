@@ -244,7 +244,7 @@ pub fn MultiRing(comptime T: type) type {
             pub fn findHeadAbove(this: *HeadNode) ?*HeadNode {
                 return if (this.next_above) |n| switch (n) {
                     .head => |h| h,
-                    .data => |d| d.findHead(),
+                    .data => |d| d.findHeadZ(),
                 } else null;
             }
 
@@ -261,10 +261,9 @@ pub fn MultiRing(comptime T: type) type {
             ///
             pub fn findHeadZ(this: *HeadNode) ?*HeadNode {
                 return if (this.next) |first| blk: {
-                    break :blk first.findHeadZ();
-                } else if (this.findHeadAbove()) |h| blk: {
-                    break :blk h;
-                } else this;
+                    const h = first.findHeadZ();
+                    break :blk if (h == this) null else h;
+                } else if (this.findHeadAbove()) |h| h else null;
             }
 
             /// Return the root of this multiring
