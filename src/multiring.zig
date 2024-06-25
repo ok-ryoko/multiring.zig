@@ -612,14 +612,8 @@ pub fn MultiRing(comptime T: type) type {
             pub fn countAfter(this: *DataNode) usize {
                 var result: usize = 0;
                 var it = this;
-                while (it.next) |n| {
-                    switch (n) {
-                        .head => break,
-                        .data => |d| {
-                            result += 1;
-                            it = d;
-                        },
-                    }
+                while (it.step()) |d| : (it = d) {
+                    result += 1;
                 }
                 return result;
             }
@@ -639,12 +633,7 @@ pub fn MultiRing(comptime T: type) type {
             ///
             pub fn findLast(this: *DataNode) *DataNode {
                 var it = this;
-                while (it.next) |n| {
-                    switch (n) {
-                        .head => break,
-                        .data => |d| it = d,
-                    }
-                }
+                while (it.step()) |d| : (it = d) {}
                 return it;
             }
 
@@ -808,16 +797,10 @@ pub fn MultiRing(comptime T: type) type {
             ///
             pub fn removeAfter(this: *DataNode, node: *DataNode) bool {
                 var it = this;
-                while (it.next) |n| {
-                    switch (n) {
-                        .head => break,
-                        .data => |d| {
-                            if (d == node) {
-                                _ = it.popNext().?;
-                                return true;
-                            }
-                            it = d;
-                        },
+                while (it.step()) |d| : (it = d) {
+                    if (d == node) {
+                        _ = it.popNext().?;
+                        return true;
                     }
                 }
                 return false;
