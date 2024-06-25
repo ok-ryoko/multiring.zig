@@ -246,6 +246,8 @@ test "non-empty ring containing subrings" {
 
     try expectEqual(@as(usize, 5), h0.countBelow());
     try expectEqual(&h1, h0.findHeadZ().?);
+    try expectEqual(&h1, h0.findHeadBelow().?);
+    try expectNull(h1.findHeadBelow());
 
     try expectEqual(@as(usize, 4), d0[0].countAfterZ());
     try expectEqual(@as(usize, 0), d0[4].countAfterZ());

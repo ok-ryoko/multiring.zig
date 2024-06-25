@@ -248,6 +248,20 @@ pub fn MultiRing(comptime T: type) type {
                 } else null;
             }
 
+            /// Return the next head node in the multiring rooted at this head node
+            ///
+            /// If this ring has no subrings, then return null
+            ///
+            pub fn findHeadBelow(this: *HeadNode) ?*HeadNode {
+                var it = this.next;
+                while (it) |d| : (it = d.step()) {
+                    if (d.next_below) |h| {
+                        return h;
+                    }
+                }
+                return null;
+            }
+
             /// Return the next head node in this multiring after this head node
             ///
             /// If this head node:
