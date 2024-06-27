@@ -174,6 +174,85 @@ test "reverse a non-empty ring" {
     }
 }
 
+fn cmp_u8(a: *const u8, b: *const u8) bool {
+    return a.* < b.*;
+}
+
+test "sort empty and nonempty rings" {
+    const M = MultiRing(u8);
+    var h = M.HeadNode{};
+    var it: ?*M.DataNode = undefined;
+    var i: usize = 0;
+
+    h.sort(&cmp_u8);
+
+    var d0 = [_]M.DataNode{
+        .{ .data = 0 },
+        .{ .data = 1 },
+        .{ .data = 2 },
+        .{ .data = 3 },
+        .{ .data = 4 },
+        .{ .data = 5 },
+        .{ .data = 6 },
+        .{ .data = 7 },
+        .{ .data = 8 },
+    };
+    h.extend(&d0);
+
+    h.sort(&cmp_u8);
+    it = h.step();
+    while (it) |d| : (it = d.step()) {
+        try expectEqual(i, d.data);
+        i += 1;
+    }
+
+    h.clear();
+    i = 0;
+
+    var d1 = [_]M.DataNode{
+        .{ .data = 8 },
+        .{ .data = 7 },
+        .{ .data = 6 },
+        .{ .data = 5 },
+        .{ .data = 4 },
+        .{ .data = 3 },
+        .{ .data = 2 },
+        .{ .data = 1 },
+        .{ .data = 0 },
+    };
+    h.extend(&d1);
+
+    h.sort(&cmp_u8);
+    it = h.step();
+    while (it) |d| : (it = d.step()) {
+        try expectEqual(i, d.data);
+        i += 1;
+    }
+
+    h.clear();
+    i = 0;
+
+    var d2 = [_]M.DataNode{
+        .{ .data = 4 },
+        .{ .data = 3 },
+        .{ .data = 1 },
+        .{ .data = 5 },
+        .{ .data = 6 },
+        .{ .data = 8 },
+        .{ .data = 7 },
+        .{ .data = 0 },
+        .{ .data = 2 },
+    };
+    h.extend(&d2);
+
+    h.sort(&cmp_u8);
+    it = h.step();
+    while (it) |d| : (it = d.step()) {
+        try expectEqual(i, d.data);
+        i += 1;
+    }
+}
+
 test "non-empty open ring (linked list)" {
     const M = MultiRing(u8);
 

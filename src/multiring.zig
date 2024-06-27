@@ -423,6 +423,73 @@ pub fn MultiRing(comptime T: type) type {
                 }
             }
 
+            /// Sort the data nodes of this ring in place with O(N(log(N))) time complexity and O(1)
+            /// space complexity using a stable merge sort algorithm
+            ///
+            /// Always leaves the ring closed
+            ///
+            /// `cmp` must refer to a function that returns `true` if the pointee of the 1st
+            /// argument is strictly less than the pointee of the 2nd argument
+            ///
+            pub fn sort(this: *HeadNode, cmp: *const fn (*const T, *const T) bool) void {
+                var first = this.step();
+                if (first == null) return;
+                var k: usize = 1;
+                while (true) : (k *= 2) {
+                    var n_merges: usize = 0;
+                    var last: ?*DataNode = null;
+                    var p = first;
+                    while (p != null) : (n_merges += 1) {
+                        var q: ?*DataNode = p;
+                        var p_len: usize = 0;
+                        {
+                            var i: usize = 0;
+                            while (i < k) : (i += 1) {
+                                p_len += 1;
+                                q = q.?.step();
+                                if (q == null) break;
+                            }
+                        }
+                        var q_len = k;
+                        while (p_len > 0 or (q_len > 0 and q != null)) {
+                            var d: *DataNode = undefined;
+                            if (p_len == 0) {
+                                d = q.?;
+                                q = q.?.step();
+                                q_len -= 1;
+                            } else if (q_len == 0 or q == null) {
+                                d = p.?;
+                                p = p.?.step();
+                                p_len -= 1;
+                            } else if (!cmp(&q.?.data, &p.?.data)) {
+                                d = p.?;
+                                p = p.?.step();
+                                p_len -= 1;
+                            } else {
+                                d = q.?;
+                                q = q.?.step();
+                                q_len -= 1;
+                            }
+                            if (last) |l| {
+                                l.insertAfter(d);
+                            } else {
+                                first = d;
+                                this.insertAfter(d);
+                            }
+                            last = d;
+                        }
+                        p = q;
+                    }
+                    if (last) |l| {
+                        l.next = .{ .head = this };
+                        if (l.next_below) |h| {
+                            h.next_above = .{ .head = this };
+                        }
+                    }
+                    if (n_merges <= 1) return;
+                }
+            }
+
             /// Insert a data node immediately after this head node
             ///
             /// Closes this ring if it is empty
