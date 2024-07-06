@@ -205,7 +205,12 @@ pub fn MultiRing(comptime T: type) type {
 
             /// Return the last data node after this ring in this multiring
             ///
-            /// If there is no such data node, then return null
+            /// If:
+            ///
+            ///   - this head node is the root of this multiring, or
+            ///   - there are no data nodes in this multiring after this head node...
+            ///
+            /// ... then return null
             ///
             pub fn findLastAbove(this: *HeadNode) ?*DataNode {
                 var result: ?*DataNode = null;
@@ -239,7 +244,15 @@ pub fn MultiRing(comptime T: type) type {
 
             /// Return the next head node in this multiring after this ring
             ///
-            /// If this head node is the root of this multiring, then return null
+            /// If this ring is the last subring of its superring, then return the head node
+            /// corresponding to the superring
+            ///
+            /// If this head node:
+            ///
+            ///   - is the root of this multiring, or
+            ///   - defines the last subring of an open superring...
+            ///
+            /// ... then return null
             ///
             pub fn findHeadAbove(this: *HeadNode) ?*HeadNode {
                 return if (this.next_above) |n| switch (n) {
@@ -250,7 +263,12 @@ pub fn MultiRing(comptime T: type) type {
 
             /// Return the next head node in the multiring rooted at this head node
             ///
-            /// If this ring has no subrings, then return null
+            /// If this head node defines:
+            ///
+            ///   - an empty ring, or
+            ///   - a nonempty ring that has no subrings...
+            ///
+            /// ... then return null
             ///
             pub fn findHeadBelow(this: *HeadNode) ?*HeadNode {
                 var it = this.next;
@@ -264,20 +282,25 @@ pub fn MultiRing(comptime T: type) type {
 
             /// Return the next head node in this multiring after this head node
             ///
-            /// If this head node:
+            /// If this ring is empty and the last subring of its superring, then return the head
+            /// node corresponding to the superring
             ///
-            ///   - is the last head node in the multiring;
-            ///   - is the root of an empty multiring;
-            ///   - defines an empty subring of an open superring, or
-            ///   - defines an open nonempty ring that contains no subrings...
+            /// If this head node defines:
+            ///
+            ///   - an empty multiring;
+            ///   - an open nonempty ring that has no subrings, or
+            ///   - the last and empty subring of an open superring...
             ///
             /// ... then return null
             ///
             pub fn findHeadZ(this: *HeadNode) ?*HeadNode {
-                return if (this.next) |first| blk: {
+                if (this.next) |first| {
                     const h = first.findHeadZ();
-                    break :blk if (h == this) null else h;
-                } else if (this.findHeadAbove()) |h| h else null;
+                    if (h != this) {
+                        return h;
+                    }
+                }
+                return if (this.findHeadAbove()) |h| h else null;
             }
 
             /// Return the root of this multiring
@@ -800,12 +823,16 @@ pub fn MultiRing(comptime T: type) type {
 
             /// Return the next data node in this multiring before `head`
             ///
-            /// If this data node is the last data node in an open ring or in this multiring, then
-            /// return null
+            /// If this data node is the last data node before `head`, in an open ring or in this
+            /// multiring, then return null
             ///
             pub fn stepUntilHeadZ(this: *DataNode, head: *HeadNode) ?*DataNode {
-                if (this.stepBelow()) |d| {
-                    return d;
+                if (this.next_below) |h| {
+                    if (h == head) {
+                        return null;
+                    } else if (h.next) |d| {
+                        return d;
+                    }
                 }
                 return if (this.next) |n| switch (n) {
                     .head => |h| h.stepAboveUntilHead(head),
@@ -876,40 +903,40 @@ pub fn MultiRing(comptime T: type) type {
             /// Remove a data node from this multiring after this data node, returning true if the
             /// node was found and removed and false otherwise
             ///
+            /// If this node and the node to be removed are equal, then return false
+            ///
             pub fn removeAfterZ(this: *DataNode, node: *DataNode) bool {
-                if (this.next) |next| {
-                    var it = switch (next) {
-                        .head => |h| h.stepAbove(),
-                        .data => |d| d,
-                    };
-                    while (it) |n| {
-                        if (n == node) {
-                            if (n.findHead()) |h| {
-                                return h.remove(node);
-                            }
-                            return false;
+                if (this == node) {
+                    return false;
+                }
+                var it: ?*DataNode = this;
+                while (it) |n| {
+                    if (n == node) {
+                        if (n.findHead()) |h| {
+                            return h.remove(node);
                         }
-                        if (n.next) |next_next| {
-                            switch (next_next) {
-                                .head => {},
-                                .data => |d| {
-                                    if (d == node) {
-                                        _ = n.popNext().?;
-                                        return true;
-                                    }
-                                },
-                            }
-                        }
-                        if (n.next_below) |h| {
-                            if (h.next) |d| {
+                        return false;
+                    }
+                    if (n.next) |next_next| {
+                        switch (next_next) {
+                            .head => {},
+                            .data => |d| {
                                 if (d == node) {
-                                    _ = h.popNext().?;
+                                    _ = n.popNext().?;
                                     return true;
                                 }
+                            },
+                        }
+                    }
+                    if (n.next_below) |h| {
+                        if (h.next) |d| {
+                            if (d == node) {
+                                _ = h.popNext().?;
+                                return true;
                             }
                         }
-                        it = n.stepZ();
                     }
+                    it = n.stepZ();
                 }
                 return false;
             }
