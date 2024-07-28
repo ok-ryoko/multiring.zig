@@ -16,11 +16,12 @@
   >
 </picture>
 
-# multiring.zig
+# multiring.zig #
 
-The *multiring* is a [hierarchical][tree], [forwardly linked][linked list] and circularly linked [abstract data type]. multiring.zig implements the multiring in the [Zig language][Zig].
+The *multiring* is a [hierarchical][tree], [forwardly linked][linked list] and circularly linked [abstract data type]. multiring.zig implements the multiring in the [Zig programming language][Zig].
 
-> ⚠ The multiring, as implemented in this repository, hasn’t been specified and verified formally.
+> [!NOTE]
+> The multiring, as implemented in this repository, hasn’t been specified and verified formally.
 
 Here’s how a multiring is traversed:
 
@@ -45,16 +46,14 @@ Here’s how a multiring is traversed:
 
 The counter-clockwise orientation of traversal in the animation above is arbitrary—we obtain it by having the normal to the plane of each ring point up and applying the [right-hand rule]. We chose a 3D representation to better visualize the depth of the traversal.
 
-## Properties of this module
+## Properties of this module ##
 
 - Linked list-like interface
 - No recursive method implementations
 - No dependencies
 - No memory management
 
-## Adding multiring.zig to your project
-
-> ℹ These instructions assume Zig v0.13.0.
+## Adding multiring.zig to a Zig v0.13.0 project ##
 
 In your project’s *build.zig.zon* file, add the following dependency:
 
@@ -104,23 +103,23 @@ This module has not yet had any versioned releases, so dependents that favor rep
 }
 ```
 
-## Using multiring.zig
+## Using multiring.zig ##
 
 Please see the tests in [*multiring_test.zig*][multiring_test.zig] as well as the [examples].
 
 The `MultiRing` API is still unstable; [Ryoko] doesn’t recommend using this library in production.
 
-## Applications
+## Applications ##
 
 multiring.zig has no known applications. Ryoko wrote it to practice Zig, have fun and show linked lists some love. If you have used multiring.zig successfully in your project(s), please let us know by [starting a discussion][discussions].
 
-## Community
+## Community ##
 
-### Understanding our code of conduct
+### Understanding our code of conduct ###
 
 Please take time to read [our code of conduct][code of conduct] before reaching out for support or making a contribution.
 
-### Getting support
+### Getting support ###
 
 If you’re encountering unexpected or undesirable program behavior, check the [issue tracker] to see whether your problem has already been reported. If not, please consider taking time to create a bug report.
 
@@ -128,15 +127,15 @@ If you have questions about using the program or participating in the community 
 
 Please allow up to 1 week for a maintainer to reply to an issue or a discussion.
 
-### Contributing to multiring.zig
+### Contributing to multiring.zig ###
 
 If you’re interested in contributing, then please read [our contributing guidelines][contributing guidelines].
 
-## License
+## License ##
 
 multiring.zig is free and open source software [licensed under the MIT license][license].
 
-## Acknowledgements
+## Acknowledgements ##
 
 The multiring.zig logos and traversal animations were made in [Inkscape] and [Blender], respectively.
 
@@ -154,7 +153,6 @@ The following resources have been instrumental in preparing this repository for 
 [contributing guidelines]: ./CONTRIBUTING.md
 [discussions]: https://github.com/ok-ryoko/multiring.zig/discussions
 [examples]: ./examples/
-[Git submodules]: https://git-scm.com/book/en/v2/Git-Tools-Submodules
 [GitHub documentation]: https://docs.github.com/en
 [github/docs]: https://github.com/github/docs
 [Inkscape]: https://inkscape.org/
@@ -164,7 +162,6 @@ The following resources have been instrumental in preparing this repository for 
 [multiring_test.zig]: ./src/multiring_test.zig
 [Open Source Guides]: https://opensource.guide/
 [right-hand rule]: https://en.wikipedia.org/wiki/Right-hand_rule
-[rsync]: https://rsync.samba.org/
 [Ryoko]: https://github.com/ok-ryoko
 [std.SinglyLinkedList]: https://github.com/ziglang/zig/blob/0.9.1/lib/std/linked_list.zig
 [tokio contributing guidelines]: https://github.com/tokio-rs/tokio/blob/d7d5d05333f7970c2d75bfb20371450b5ad838d7/CONTRIBUTING.md

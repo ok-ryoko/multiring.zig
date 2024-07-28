@@ -1,12 +1,12 @@
-# Contributing to multiring.zig
+# Contributing to multiring.zig #
 
 Thank you for your interest in improving this project! We welcome contributions of all types and sizes from everyone.
 
-## Code of conduct
+## Code of conduct ##
 
 The community around this project has a [code of conduct] that all participants are expected to understand and follow. We believe that enforcing a code of conduct is crucial for cultivating [diversity, equity, inclusion and belonging][DEIB] as well as [psychological safety]. These are necessary ingredients for a healthy and self-sustaining community that generates value as well as fulfilling experiences for its participants.
 
-## Table of contents
+## Table of contents ##
 
 - [Code of conduct](#code-of-conduct)
 - [Ways to contribute](#ways-to-contribute)
@@ -36,7 +36,7 @@ The community around this project has a [code of conduct] that all participants 
   - [Versioning scheme](#versioning-scheme)
   - [Changes to our process](#changes-to-our-process)
 
-## Ways to contribute
+## Ways to contribute ##
 
 - [🐛 Report a bug or reproduce an existing bug][bugs]
 - [⚙️  Spot a chore][operations]
@@ -46,9 +46,8 @@ The community around this project has a [code of conduct] that all participants 
 - [🏷️ Comment or work on an existing issue][issues]
 - [💬 Start a discussion][discussions]
 - [🕹️ Use multiring.zig][use multiring.zig] or write about it
-- [🛠️ Apply for maintainership][governance]
 
-## Opening an issue
+## Opening an issue ##
 
 An issue represents a logical unit of work on the project. [Opening an issue][open an issue] is the simplest way to contribute to the project and sets the stage for a potential incremental improvement.
 
@@ -56,22 +55,22 @@ When we open an issue, we are effectively requesting a constructive discussion a
 
 See also: [Tracking and closing issues](#tracking-and-closing-issues)
 
-## Contribution workflow
+## Contribution workflow ##
 
-### Local development requirements
+### Local development requirements ###
 
 To work on multiring.zig, you’ll need some or all of following software:
 
 - [Git] 2.9 or newer
 - [Zig] 0.13.0, for work on the multiring data structure
-- [ShellCheck] 0.8, for [Git hook][githooks] development
-- [yamllint] 1.31, for [GitHub issue forms][syntax for issue forms] and [GitHub Actions workflows]
+- [ShellCheck] 0.8.0, for [Git hook][githooks] development
+- [yamllint] 1.31.0 or newer, for [GitHub issue forms][syntax for issue forms] and [GitHub Actions workflows]
 
-### Claiming an issue
+### Claiming an issue ###
 
 If you would like to work on an issue, then leave a comment containing a brief plan for resolving the issue and await feedback from the community. Your proposal shall be reviewed by at least 1 maintainer within 1 week. Participants shall agree on an *ad hoc* timeline for the work, which may be renegotiated at any point in the process.
 
-### Getting the source code
+### Getting the source code ###
 
 Begin your contribution by creating a [GitHub account] or signing in and [forking this repository][fork a repo].
 
@@ -91,7 +90,7 @@ cd multiring.zig
 
 See also: [Attribution](#attribution)
 
-### Keeping your local repository up to date
+### Keeping your local repository up to date ###
 
 There may be new commits to this repository while you’re working on your fork. Keep your fork up to date by adding this repository as an upstream remote:
 
@@ -107,7 +106,7 @@ git pull -r upstream main
 
 `-r` is short for `--rebase`, which tells Git to apply the changes in your branch’s commits on top of the branch onto which you are rebasing (here, *main*).
 
-### Preparing your local repository for work
+### Preparing your local repository for work ###
 
 Enable this repository’s commit hooks:
 
@@ -131,7 +130,7 @@ You can now work on multiring.zig!
 
 See also: [Commit hooks](#commit-hooks)
 
-### Committing your changes locally
+### Committing your changes locally ###
 
 When you’re ready, run `git commit` and enter an accurate commit message.
 
@@ -141,7 +140,7 @@ If you encounter an error that you don’t have time to resolve, then consider [
 
 See also: [Commit messages](#commit-messages), [Commit hooks](#commit-hooks)
 
-### Handling merge conflicts
+### Handling merge conflicts ###
 
 When rebasing updates from *main* onto your branch, you’ll encounter a merge conflict when you’ve made and committed changes in your branch that are incompatible with upstream changes. You must resolve the conflict in order to complete the merge. [Ryoko] recommends the following resources for those who need to resolve a merge conflict or want to learn more:
 
@@ -150,7 +149,7 @@ When rebasing updates from *main* onto your branch, you’ll encounter a merge c
 
 We’re happy to help with merge conflicts—please [start a discussion][discussions] if you get stuck.
 
-### Creating a pull request
+### Creating a pull request ###
 
 Ensure that your fork on GitHub is in sync with your local repository:
 
@@ -160,17 +159,17 @@ git push origin my-branch
 
 [Create a pull request] from your branch to this repository’s *main* branch, filling out the provided [template][pull request template].
 
-#### (Optional) Organizing your changes
+#### (Optional) Organizing your changes ####
 
 Before creating a pull request, consider performing an [interactive rebase] to organize your changes into one logical set of changes per commit. This will facilitate community review of your pull request.
 
-### Receiving feedback
+### Receiving feedback ###
 
 Your pull request shall be reviewed by at least 1 maintainer within 2 weeks, and may be reviewed by any member of the community at any point in the process. The maintainer(s) reviewing your pull request may [ask you to make changes][incorporating feedback]. When this happens, we agree on an *ad hoc* timeline for receiving your changes on the basis of their estimated size, complexity and urgency as well as your availability.
 
 See also: [Reviewing pull requests](#reviewing-pull-requests)
 
-### Approval and attribution
+### Approval and attribution ###
 
 The maintainers shall approve any pull request that satisfies the approval criteria and ensure that all work related to the pull request is attributed appropriately.
 
@@ -178,13 +177,13 @@ The maintainers reserve the right to rebase the commits in the pull request prio
 
 See also: [Pull request approval criteria](#pull-request-approval-criteria), [Attribution](#attribution)
 
-## Project practices and guidelines
+## Project practices and guidelines ##
 
-### Design
+### Design ###
 
 We maintain an informal record of the implementation’s design in [DESIGN.md]. We encourage all new contributors to familiarize themselves with this document.
 
-### Tracking and closing issues
+### Tracking and closing issues ###
 
 We use [GitHub issues] to track the following types of work:
 
@@ -200,7 +199,7 @@ We don’t assign issues; all contributions are voluntarily.
 
 We [discuss][discussions] all queries that don’t fall into one of the categories above.
 
-#### Closure
+#### Closure ####
 
 We always provide a concise explanation for why we are closing an issue.
 
@@ -221,13 +220,13 @@ We close any issue that duplicates an existing issue.
 
 See also: [Reviewing pull requests](#reviewing-pull-requests)
 
-### Flavors of code
+### Flavors of code ###
 
 - Zig source files: *src/*, *build.zig*
 - [POSIX shell] scripts: *.githooks/*
 - [YAML] configuration files: *.github/*
 
-### Formatting conventions
+### Formatting conventions ###
 
 We use a [*.gitattributes* file][.gitattributes] to enforce the following properties:
 
@@ -240,11 +239,11 @@ We format Zig source code files using the `zig fmt` command, either manually or 
 
 See also: [Commit hooks](#commit-hooks)
 
-### Branching strategy
+### Branching strategy ###
 
 We believe that this small, simple and pre-release project should have an accordingly straightforward workflow. We therefore use a centralized workflow, collaborating directly on the *main* branch.
 
-### Commit messages
+### Commit messages ###
 
 We use a minimal and familiar commit message format:
 
@@ -278,7 +277,7 @@ Ryoko recommends the following resources for those wanting to learn more about c
 
 We don’t plan to adopt the [Conventional Commits 1.0.0] standard because we believe, given the small scope and scale of multiring.zig, that investing in the associated teaching and tooling wouldn’t yield proportional returns and may instead raise the barrier to participation for potential contributors.
 
-### Commit hooks
+### Commit hooks ###
 
 The following shell command enables this repository’s Git hooks:
 
@@ -286,22 +285,9 @@ The following shell command enables this repository’s Git hooks:
 git config --local core.hooksPath .githooks
 ```
 
-#### pre-commit
+#### pre-commit ####
 
-We use a [pre-commit hook] to validate our code at commit time. Here’s an example of the output:
-
-```console
-$ git commit -m 'inline switch cases on Node'
-pre-commit: info: checking Zig source code formatting...
-pre-commit: info: building...
-pre-commit: info: running tests...
-All 2 tests passed.
-pre-commit: info: OK!
-[main b644b00] inline switch cases on Node
- 1 file changed, 5 insertions(+), 12 deletions(-)
-```
-
-When we commit a change to *build.zig* or any *.zig* file in *src/*, the pre-commit hook:
+We use a [pre-commit hook] to validate our code at commit time. When we commit a change to *build.zig* or any *.zig* file in *src/*, the pre-commit hook:
 
 - verifies the formatting of the changed file(s);
 - builds the library, and
@@ -319,13 +305,13 @@ We each take responsibility for running the proper version of ShellCheck and yam
 
 See also: [Continuous integration](#continuous-integration)
 
-### Continuous integration
+### Continuous integration ###
 
 We practice [continuous integration] with [GitHub Actions]. We run one workflow for each flavor of code for both pushes and pull requests to *main*. This design is appropriate because each flavor of code in this repository is consumed and validated independently.
 
 See also: [Commit hooks](#commit-hooks)
 
-### Reviewing pull requests
+### Reviewing pull requests ###
 
 Any member of the community is welcome to participate in the review process for any pull request.
 
@@ -345,21 +331,21 @@ If a pull request appears to have stalled or been abandoned, then we follow up w
 
 See also: [Pull request approval criteria](#pull-request-approval-criteria)
 
-### Pull request approval criteria
+### Pull request approval criteria ###
 
 - The changes are all in the scope of and resolve an open issue
 - The contributor has filled the [pull request template] out accurately
 - The commit messages are accurate and [formatted properly](#commit-messages)
 
-### Attribution
+### Attribution ###
 
 We identify all contributors by their preferred commit author name and email address in the [*CONTRIBUTORS* file][CONTRIBUTORS] in descending chronological order (most recent first).
 
-### Versioning scheme
+### Versioning scheme ###
 
 multiring.zig has no versioning scheme because we haven’t yet held a release.
 
-### Changes to our process
+### Changes to our process ###
 
 These guidelines exist to foster a seamless and open contributing experience for all. We comply with them insofar as they make our work easier. When they no longer fulfill this role, we take pause to come together to discuss potential revisions openly and transparently, as we would any other issue.
 
@@ -387,8 +373,7 @@ These guidelines exist to foster a seamless and open contributing experience for
 [GitHub Actions workflows]: https://docs.github.com/en/actions/using-workflows
 [GitHub Actions]: https://github.com/features/actions
 [GitHub issues]: https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues
-[GitHub-hosted Ubuntu 22.04 LTS runner image]: https://github.com/actions/runner-images/blob/releases/ubuntu22/20230426/images/linux/Ubuntu2204-Readme.md
-[governance]: ./GOVERNANCE.md
+[GitHub-hosted Ubuntu 22.04 LTS runner image]: https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md
 [How do I resolve merge conflicts in my Git repository?]: https://stackoverflow.com/q/161813
 [How to Write a Git Commit Message]: https://cbea.ms/git-commit/
 [incorporating feedback]: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/reviewing-changes-in-pull-requests/incorporating-feedback-in-your-pull-request
@@ -409,5 +394,5 @@ These guidelines exist to foster a seamless and open contributing experience for
 [use multiring.zig]: https://github.com/ok-ryoko/multiring.zig#usage
 [workflows]: ./.github/workflows
 [YAML]: https://yaml.org/
-[yamllint]: https://yamllint.readthedocs.io/en/v1.29.0/
+[yamllint]: https://yamllint.readthedocs.io/en/stable/
 [Zig]: https://ziglang.org/
