@@ -29,7 +29,7 @@ readonly against
 # Capture the names of all files in the index, exiting early if there
 # are no changes
 #
-files="$(git diff --staged --name-only "${against}")"
+files="$(git diff --staged --name-only --diff-filter=ACMR "${against}")"
 if [ -z "${files}" ]; then exit 0; fi
 readonly files
 
